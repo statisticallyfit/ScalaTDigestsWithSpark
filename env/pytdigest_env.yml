@@ -1,0 +1,60 @@
+name: pytdigest_env
+channels:
+  - conda-forge
+  - pytorch
+  - defaults
+dependencies:
+
+
+  # ========================
+  # Core
+  # ========================
+  - mypy
+  - typing
+  - pip
+  - python
+  - jupytext
+  - jupyterlab
+  - ipywidgets
+  - python-language-server
+  - ipykernel 
+
+
+  # ========================
+  # Matrix Diff Tools
+  # ========================
+  - jax
+  - numdifftools
+  - xarray
+  - numpy
+  - mpmath #dependency for sympy https://docs.sympy.org/latest/install.html#mpmath
+  - sympy
+  - scipy
+  - spacy
+  - statsmodels
+  - pandas
+  - patsy
+
+
+
+
+
+
+  # ========================
+  # PLOTTING
+  # ========================
+  - matplotlib
+  - seaborn
+  - plotly
+  
+  
+  # ========================
+  # PIP
+  # ========================
+  - pip: 
+      - tdigest
+  
+
+prefix: /development/bin/python/miniconda3/envs/pytdigest_env
+
+
