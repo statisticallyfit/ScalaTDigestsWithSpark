@@ -86,9 +86,9 @@ libraryDependencies ++= Seq(
 
 	// Spark
 	"org.apache.spark" %% "spark-core" % "3.1.2",
-	"org.apache.spark" %% "spark-sql" % "3.1.2" % "provided",
-	"org.apache.spark" %% "spark-mllib" % "3.1.2" % "provided",
-	"org.apache.spark" %% "spark-streaming" % "3.1.2" % "provided",
+	"org.apache.spark" %% "spark-sql" % "3.1.2", // % "provided",
+	"org.apache.spark" %% "spark-mllib" % "3.1.2", // % "provided",
+	"org.apache.spark" %% "spark-streaming" % "3.1.2",// % "provided",
 	"org.apache.spark" %% "spark-avro" % "3.1.2",
 	"com.databricks" %% "spark-xml" % "0.13.0"
 

@@ -5,7 +5,6 @@ import org.isarnproject.sketches.java.TDigest
 import org.isarnproject.sketches.spark.tdigest._
 
 import scala.util.Random._
-import org.apache.spark
 import org.apache.spark.sql.SparkSession
 
 object tryout {
