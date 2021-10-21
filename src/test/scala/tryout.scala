@@ -7,11 +7,15 @@ import org.isarnproject.sketches.spark.tdigest._
 import scala.util.Random._
 import org.apache.spark.sql.SparkSession
 
+
 object tryout {
 
 	val spark:SparkSession = SparkSession.builder()
 		.master("local[1]").appName("SparkByExamples.com")
 		.getOrCreate()
+
+	// NOTE: need these implicits for the $"_1" in the udf arg to work
+	import spark.sqlContext.implicits._
 
 
 	// Sketch a numeric column

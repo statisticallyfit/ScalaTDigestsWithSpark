@@ -79,17 +79,19 @@ libraryDependencies ++= Seq(
 
 	// ISARN (T-Digests with Spark work)
 	"org.isarnproject" %% "isarn-sketches" % "0.3.0",
+	"org.isarnproject" % "isarn-sketches-java" % "0.3.0",
+
 	"org.isarnproject" %% "isarn-collections" % "0.0.4",
+	 "org.isarnproject" %% "isarn-algebra-api" % "0.0.3",
 	"org.isarnproject" %% "isarn-algebird-algebra-api" % "0.0.4",
+	"com.twitter" %% "algebird-core" % "0.13.4",
+
 	"org.isarnproject" %% "isarn-sketches-spark" % "0.5.2-sp3.0",
 
 
 	// Spark
 	"org.apache.spark" %% "spark-core" % "3.1.2",
 	"org.apache.spark" %% "spark-sql" % "3.1.2", // % "provided",
-	"org.apache.spark" %% "spark-mllib" % "3.1.2", // % "provided",
-	"org.apache.spark" %% "spark-streaming" % "3.1.2",// % "provided",
-	"org.apache.spark" %% "spark-avro" % "3.1.2",
-	"com.databricks" %% "spark-xml" % "0.13.0"
+	"org.apache.spark" %% "spark-mllib" % "3.1.2"
 
 )
