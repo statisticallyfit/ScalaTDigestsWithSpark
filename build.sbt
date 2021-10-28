@@ -21,10 +21,7 @@ addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
 
 libraryDependencies ++= Seq(
-	"org.apache.commons" % "commons-lang3" % "3.12.0", // was 3.6
-
 	//Scala Libraries
-
 	"org.scala-lang" % "scala-library" % "2.12.13",
 	"org.scala-lang" % "scala-compiler" % "2.12.13",
 	"org.scala-lang" % "scala-reflect" % "2.12.13",
@@ -38,6 +35,29 @@ libraryDependencies ++= Seq(
 	"org.specs2" %% "specs2-scalacheck" % "4.12.9" % Test, // was 4.10.6
 	//Discipline
 	"org.typelevel" %% "discipline" % "0.11.1", //was 0.8
+
+
+	// -- Apache commons lang3:
+	"org.apache.commons" % "commons-lang3" % "3.12.0", // was 3.6
+
+
+	// Math + Statistics libraries
+	// -- Apache commons math3
+	"org.apache.commons" % "commons-math3" % "3.6.1",
+	// -- Breeze:
+	"org.scalanlp" %% "breeze" % "2.0",
+	// -- Probability Monad
+	"org.jliszka" %% "probability-monad" % "1.0.4",
+
+
+	// Plotting libraries:
+	// -- Breeze-viz
+	"org.scalanlp" %% "breeze-viz" % "2.0",
+	// -- Plotly
+	"org.plotly-scala" %% "plotly-core" % "0.8.2",
+	"org.plotly-scala" %% "plotly-render" % "0.8.2",
+
+
 	//Scalaz
 	"org.scalaz"      %% "scalaz-core"    % "7.3.5", // 7.3.0-M19
 	//Cats
@@ -56,33 +76,31 @@ libraryDependencies ++= Seq(
 	//"org.spire-math" %% "kind-projector" % "0.9.10", // was 0.9.9
 
 	//FunctionMeta library to print function name, arguments... for a function while inside that function
-	"com.github.katlasik" %% "functionmeta" % "0.4.1" % "provided",
+	//"com.github.katlasik" %% "functionmeta" % "0.4.1" % "provided",
 	// sourcecode library to print function name passed as argument
 	"com.lihaoyi" %% "sourcecode" % "0.2.7",
 
 
 	// Matryoshka
-	"com.slamdata" %% "matryoshka-core" % "0.21.3",
+	//"com.slamdata" %% "matryoshka-core" % "0.21.3",
 
 	//Droste recursion schemes
-	"io.higherkindness" %% "droste-core" % "0.8.0",
-	"io.higherkindness" %% "droste-laws" % "0.8.0",
-	"io.higherkindness" %% "droste-macros" % "0.8.0",
-	/*"io.higherkindness" %% "droste-meta" % "0.8.0",
-	"io.higherkindness" %% "droste-reftree" % "0.8.0",*/
-	"io.higherkindness" %% "droste-scalacheck" % "0.8.0",
+	//	"io.higherkindness" %% "droste-core" % "0.8.0",
+	//	"io.higherkindness" %% "droste-laws" % "0.8.0",
+	//	"io.higherkindness" %% "droste-macros" % "0.8.0",
+	//	/*"io.higherkindness" %% "droste-meta" % "0.8.0",
+	//	"io.higherkindness" %% "droste-reftree" % "0.8.0",*/
+	//	"io.higherkindness" %% "droste-scalacheck" % "0.8.0",
 
 
 
-	// Probability Monad
-	"org.jliszka" %% "probability-monad" % "1.0.4",
 
 	// ISARN (T-Digests with Spark work)
 	"org.isarnproject" %% "isarn-sketches" % "0.3.0",
 	"org.isarnproject" % "isarn-sketches-java" % "0.3.0",
 
 	"org.isarnproject" %% "isarn-collections" % "0.0.4",
-	 "org.isarnproject" %% "isarn-algebra-api" % "0.0.3",
+	"org.isarnproject" %% "isarn-algebra-api" % "0.0.3",
 	"org.isarnproject" %% "isarn-algebird-algebra-api" % "0.0.4",
 	"com.twitter" %% "algebird-core" % "0.13.4",
 

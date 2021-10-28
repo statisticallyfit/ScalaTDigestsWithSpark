@@ -1,3 +1,5 @@
+package Project_IsarnSketchesSpark
+
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.isarnproject.sketches.java.TDigest
