@@ -16,6 +16,8 @@ offline := true
 
 //For the Kind projector plugin
 resolvers += Resolver.sonatypeRepo("releases")
+resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+//resolvers += Resolver.bintrayRepo("cibotech", "public")
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
@@ -110,6 +112,18 @@ libraryDependencies ++= Seq(
 	// Spark
 	"org.apache.spark" %% "spark-core" % "3.1.2",
 	"org.apache.spark" %% "spark-sql" % "3.1.2", // % "provided",
-	"org.apache.spark" %% "spark-mllib" % "3.1.2"
+	"org.apache.spark" %% "spark-mllib" % "3.1.2",
+
+
+	// CDF Spline tutorial dependencies here: https://github.com/erikerlandson/cdf-splining-prototype/blob/master/cdf-splining-poc.ipynb
+	"com.manyangled" % "gibbous" % "0.3.0", // Convex optimization
+	"com.manyangled" % "snowball" % "0.3.0", // Monotonic splining
+	"io.github.cibotech" %% "evilplot" % "0.8.1",
+	"io.github.cibotech" %% "evilplot-repl" % "0.8.1"
+	//"com.cibo" %% "evilplot" % "0.8.0", // evilplot
+	//"com.cibo" %% "evilplot-repl" % "0.8.0"// evilplot repl - makes plotting easier from repl (dynamic window)
+	// TODO how to update this build.sbt if using Ammonite = https://hyp.is/QPtwKjmOEeytewuDfT7KyA/cibotech
+	//  .github.io/evilplot/getting-started.html
+
 
 )
