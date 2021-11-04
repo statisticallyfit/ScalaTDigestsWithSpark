@@ -4,9 +4,12 @@ package Project_IsarnSketches
  *
  */
 
-import breeze.stats.distributions.Gamma
-import breeze.stats.distributions.Rand.FixedSeed.randBasis
+//import breeze.stats.distributions.Gamma
+//import breeze.stats.distributions.Rand.FixedSeed.randBasis
+import org.apache.commons.math3.distribution.GammaDistribution
 import org.isarnproject.sketches.TDigest
+
+import util.GraphCDFSpline
 
 
 object Example_TDigestSketch extends App {
@@ -25,7 +28,8 @@ object Example_TDigestSketch extends App {
 	println(s"cdfi = $cdfi")
 	// ----------------------------------------------------------
 
-	val gamm = new Gamma(shape = 2, scale = 2) //long right tail of the pdf, right-skewed
+	//long right tail of the pdf, right-skewed
+	val gamm: GammaDistribution = new GammaDistribution(2, 2)
 	val gammaData: Seq[Double] = gamm.sample(10000)
 	// sketch cdf of the gamma data
 	val gammaSketch: TDigest = TDigest.sketch(gammaData)
@@ -43,8 +47,15 @@ object Example_TDigestSketch extends App {
 	println(s"cdf inverse(0.5) = ${gammaSketch.cdfInverse(0.5)}")
 	println(s"cdf inverse(0.3) = ${gammaSketch.cdfInverse(0.3)}")
 
+
+	GraphCDFSpline.showSpliningComparisons(new GammaDistribution(2, 2))
+
+
+
 	// -----
-	val gammaDataLocalized: Seq[Double] = Gamma(shape = 15, scale = 3).sample(10000)
+	// More localized, centered, normal-looking Gamma (less skewed)
+
+	val gammaDataLocalized: Seq[Double] = new GammaDistribution(15, 3).sample(10000)
 	val gammaSketchLocalized: TDigest = TDigest.sketch(gammaDataLocalized)
 	println("\nGamma more normal-looking:")
 	println(s"cdf(0) = ${gammaSketchLocalized.cdf(0)}")
@@ -58,4 +69,6 @@ object Example_TDigestSketch extends App {
 
 	println(s"cdf inverse(0.5) = ${gammaSketchLocalized.cdfInverse(0.5)}")
 	println(s"cdf inverse(0.3) = ${gammaSketchLocalized.cdfInverse(0.3)}")
+
+	GraphCDFSpline.showSpliningComparisons(new GammaDistribution(15, 3))
 }

@@ -119,11 +119,18 @@ libraryDependencies ++= Seq(
 	"com.manyangled" % "gibbous" % "0.3.0", // Convex optimization
 	"com.manyangled" % "snowball" % "0.3.0", // Monotonic splining
 	"io.github.cibotech" %% "evilplot" % "0.8.1",
-	"io.github.cibotech" %% "evilplot-repl" % "0.8.1"
+	"io.github.cibotech" %% "evilplot-repl" % "0.8.1",
 	//"com.cibo" %% "evilplot" % "0.8.0", // evilplot
 	//"com.cibo" %% "evilplot-repl" % "0.8.0"// evilplot repl - makes plotting easier from repl (dynamic window)
 	// TODO how to update this build.sbt if using Ammonite = https://hyp.is/QPtwKjmOEeytewuDfT7KyA/cibotech
 	//  .github.io/evilplot/getting-started.html
 
 
+	// T Digest divergence Experiment dependencies:
+	// -- DivergenceExperiment:
+	// https://github.com/erikerlandson/isarn-sketches-algebird-api/blob/blog/t_digest_sum/src/main/scala/org/isarnproject/sketchesAlgebirdAPI/AlgebirdFactory.scala#L111-L114
+	// -- Dependencies:
+	// https://github.com/erikerlandson/isarn-sketches-algebird-api/blob/blog/t_digest_sum/src/main/scala/org/isarnproject/sketchesAlgebirdAPI/AlgebirdFactory.scala#L111-L114
+	"org.json4s" %% "json4s-jackson" % "4.0.3", //"3.2.10"
+	"com.twitter" %% "algebird-core" % "0.13.8" //"0.12.1"
 )
