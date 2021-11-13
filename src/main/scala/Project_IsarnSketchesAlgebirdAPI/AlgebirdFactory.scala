@@ -16,6 +16,7 @@ import org.isarnproject.collections.mixmaps.ordered.tree.DataMap
 import org.isarnproject.sketches.tdmap.tree.INodeTD
 import org.isarnproject.sketches.TDigest
 import org.json4s.JObject
+import util.GeneralUtil
 
 import scala.collection.immutable
 
@@ -125,7 +126,7 @@ object experiment {
 		val sampleSize: Int = 10
 		val dataSize: Int = 10000
 		val nsums: Int = 100
-		val sumSample: Int = 10
+		val sumSample: Int = 50 // 10
 
 
 		val raw: Vector[(BrokenTDigestAdd, OrderedTDigestAdd)] = Vector.fill(sampleSize) {
@@ -133,10 +134,10 @@ object experiment {
 
 			// NOTE: monoidal addition as defined in the original paper
 			val ref: BrokenTDigestAdd = data
-				.map(TDigest.sketch(_))
-				.scanLeft(TDigest.empty())(TDigest.combine(_, _))
+				.map((distSample: Vector[Double]) => TDigest.sketch(distSample)) //vec of tdigests
+				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
 				.drop(1)
-				.map(kolmogorovSmirnovDStatistic(_, dist)) // vector
+				.map((tdigest: TDigest) => kolmogorovSmirnovDStatistic(tdigest, dist)) // vector of doubles KSDs
 
 			// NOTE: experimental definition where clusters are inserted from largest to smallest
 			val exp: OrderedTDigestAdd = data
@@ -148,7 +149,7 @@ object experiment {
 		}
 
 		val step: Int = math.max(1, nsums / sumSample)
-		val jvals: Range = 0 to nsums by step
+		val jvals: Range = 0 to nsums by step // pick out by num monoidal additions
 		val ref: BrokenTDigestAdd = jvals.flatMap(j => raw.map(_._1(j)))
 		val exp: OrderedTDigestAdd = jvals.flatMap(j => raw.map(_._2(j)))
 		val jvf: Indices = jvals.flatMap(j => Vector.fill(sampleSize)(j)) //axis? indices?
@@ -173,21 +174,30 @@ object AlgebirdFactoryRunner extends App {
 	import experiment._
 
 
-	def run(fname: String) {
-		writeJSON(
-			Vector(
-				collect(monoid, new NormalDistribution()),
-				collect(monoid, new UniformRealDistribution()),
-				collect(monoid, new ExponentialDistribution(1.0))
-			),
-			fname)
-	}
+//	def run(fname: String) {
+//		/*writeJSON(
+//			Vector(
+//				collect(monoid, new NormalDistribution()),
+//				collect(monoid, new UniformRealDistribution()),
+//				collect(monoid, new ExponentialDistribution(1.0))
+//			),
+//			fname)*/
+//		writeJSON(Vector(collect(monoid, new ExponentialDistribution(3.5))), fname)
+//	}
+//
+//
+//	val path = "/development/projects/statisticallyfit/github/learningmathstat/ScalaTDigestsWithSpark/src/main/scala" +
+//		"/Project_IsarnSketchesAlgebirdAPI/JSON_result_smallstep_expon"
+//
+//
+//	run(path)
 
 
-	val path = "/development/projects/statisticallyfit/github/learningmathstat/ScalaTDigestsWithSpark/src/main/scala" +
-		"/Project_IsarnSketchesAlgebirdAPI/JSON_result"
+	val (brok, ord, indFlat): (Seq[Double], Seq[Double], Seq[Int]) =
+		collect(monoid, new ExponentialDistribution(3.5))
 
 
-	run(path)
-
+	// TODO simpler to change above collect() to return the chunks of the indices and then group the 'ref' and 'exp'
+	//  by the simple sample size number
+	val ind: Seq[Seq[Int]] = GeneralUtil.splitGroups(indFlat)
 }
