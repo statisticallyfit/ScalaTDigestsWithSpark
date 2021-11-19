@@ -22,6 +22,11 @@ import scala.collection.immutable
 
 
 
+import com.cibo.evilplot._
+import com.cibo.evilplot.plot._
+import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
+
+
 /**
  * Factory functions for generating Algebird objects based on TDigest
  */
@@ -122,7 +127,7 @@ object experiment {
 		d
 	}
 
-	def collect(mon: Monoid[TDigest], dist: RealDistribution): (BrokenTDigestAdd, OrderedTDigestAdd, Indices) = {
+	def collect(mon: Monoid[TDigest], dist: RealDistribution)/*: (BrokenTDigestAdd, OrderedTDigestAdd, Indices)*/ = {
 		val sampleSize: Int = 10
 		val dataSize: Int = 10000
 		val nsums: Int = 100
@@ -150,9 +155,10 @@ object experiment {
 
 		val step: Int = math.max(1, nsums / sumSample)
 		val jvals: Range = 0 to nsums by step // pick out by num monoidal additions
-		val ref: BrokenTDigestAdd = jvals.flatMap(j => raw.map(_._1(j)))
-		val exp: OrderedTDigestAdd = jvals.flatMap(j => raw.map(_._2(j)))
-		val jvf: Indices = jvals.flatMap(j => Vector.fill(sampleSize)(j)) //axis? indices?
+		val ref: Seq[Seq[Double]] = jvals.map(j => raw.map(_._1(j))) ///jvals.flatMap(j => raw.map(_._1(j)))
+		val exp: Seq[Seq[Double]] = jvals.map(j => raw.map(_._2(j))) //jvals.flatMap(j => raw.map(_._2(j)))
+		val jvf: Seq[Seq[Int]] = jvals.map(j => Vector.fill(sampleSize)(j)) //axis? indices? //jvals.flatMap(j =>
+		// Vector.fill(sampleSize)(j)) //axis? indices?
 
 		(ref, exp, jvf)
 	}
@@ -174,30 +180,64 @@ object AlgebirdFactoryRunner extends App {
 	import experiment._
 
 
-//	def run(fname: String) {
-//		/*writeJSON(
-//			Vector(
-//				collect(monoid, new NormalDistribution()),
-//				collect(monoid, new UniformRealDistribution()),
-//				collect(monoid, new ExponentialDistribution(1.0))
-//			),
-//			fname)*/
-//		writeJSON(Vector(collect(monoid, new ExponentialDistribution(3.5))), fname)
-//	}
-//
-//
-//	val path = "/development/projects/statisticallyfit/github/learningmathstat/ScalaTDigestsWithSpark/src/main/scala" +
-//		"/Project_IsarnSketchesAlgebirdAPI/JSON_result_smallstep_expon"
-//
-//
-//	run(path)
+	/*def run(fname: String) {
+		/*writeJSON(
+			Vector(
+				collect(monoid, new NormalDistribution()),
+				collect(monoid, new UniformRealDistribution()),
+				collect(monoid, new ExponentialDistribution(1.0))
+			),
+			fname)*/
+		writeJSON(Vector(collect(monoid, new ExponentialDistribution(3.5))), fname)
+	}
 
 
-	val (brok, ord, indFlat): (Seq[Double], Seq[Double], Seq[Int]) =
+	val path = "/development/projects/statisticallyfit/github/learningmathstat/ScalaTDigestsWithSpark/src/main/scala" +
+		"/Project_IsarnSketchesAlgebirdAPI/JSON_result_nonflat"
+
+
+	run(path)
+	 */
+
+
+
+
+
+
+	val (brok, ord, ind): (Seq[Seq[Double]], Seq[Seq[Double]], Seq[Seq[Int]]) = {
 		collect(monoid, new ExponentialDistribution(3.5))
+	}
+	/*println("broken:")
+	brok.foreach(v => println(v))
+	println("\nordered: ")
+	ord.foreach(v => println(v))
+	println("\nindices: ")
+	ind.foreach(v => println(v))*/
 
+	displayPlot(
+		Overlay(
+			BoxPlot(brok).standard(xLabels = (1 to 10).map(_.toString)),
+			BoxPlot(ord).standard(xLabels = (1 to 10).map(_.toString))
+		).xAxis().yAxis().render()
+	)
 
-	// TODO simpler to change above collect() to return the chunks of the indices and then group the 'ref' and 'exp'
-	//  by the simple sample size number
-	val ind: Seq[Seq[Int]] = GeneralUtil.splitGroups(indFlat)
+	/*
+
+		// TODO simpler to change above collect() to return the chunks of the indices and then group the 'ref' and 'exp'
+		//  by the simple sample size number
+		val ind: Seq[Seq[Int]] = GeneralUtil.splitGroups(indFlat)*/
+
+	/*Overlay(
+		contourPlot(data),
+		ScatterPlot(
+			Seq(Point(-71.081754,42.3670272)),
+			pointRenderer = Some(PointRenderer.default(color = Some(HTMLNamedColors.crimson))))
+	).xLabel("Lon")
+		.yLabel("Lat")
+		.xbounds(-71.2, -71)
+		.ybounds(42.20, 42.4)
+		.xAxis()
+		.yAxis()
+		.frame()
+		.render()*/
 }
