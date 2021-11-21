@@ -58,7 +58,9 @@ libraryDependencies ++= Seq(
 	// -- Plotly
 	"org.plotly-scala" %% "plotly-core" % "0.8.2",
 	"org.plotly-scala" %% "plotly-render" % "0.8.2",
-
+	// Evilplot
+	"io.github.cibotech" %% "evilplot" % "0.8.1",
+	"io.github.cibotech" %% "evilplot-repl" % "0.8.1",
 
 	//Scalaz
 	"org.scalaz"      %% "scalaz-core"    % "7.3.5", // 7.3.0-M19
@@ -118,8 +120,7 @@ libraryDependencies ++= Seq(
 	// CDF Spline tutorial dependencies here: https://github.com/erikerlandson/cdf-splining-prototype/blob/master/cdf-splining-poc.ipynb
 	"com.manyangled" % "gibbous" % "0.3.0", // Convex optimization
 	"com.manyangled" % "snowball" % "0.3.0", // Monotonic splining
-	"io.github.cibotech" %% "evilplot" % "0.8.1",
-	"io.github.cibotech" %% "evilplot-repl" % "0.8.1",
+
 	//"com.cibo" %% "evilplot" % "0.8.0", // evilplot
 	//"com.cibo" %% "evilplot-repl" % "0.8.0"// evilplot repl - makes plotting easier from repl (dynamic window)
 	// TODO how to update this build.sbt if using Ammonite = https://hyp.is/QPtwKjmOEeytewuDfT7KyA/cibotech

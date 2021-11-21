@@ -20,12 +20,14 @@ import util.GeneralUtil
 
 import scala.collection.immutable
 
-
-
 import com.cibo.evilplot._
 import com.cibo.evilplot.plot._
+import com.cibo.evilplot.plot.renderers.BoxRenderer
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
+import com.cibo.evilplot.colors.Color
+import com.cibo.evilplot.colors.HTMLNamedColors.{dodgerBlue, fireBrick}
 
+import com.cibo.evilplot.geometry.{Drawable, Extent, Rect}
 
 /**
  * Factory functions for generating Algebird objects based on TDigest
@@ -106,6 +108,14 @@ object experiment {
 			// insert clusters from largest to smallest, instead of randomly
 			(ltd.clusters.toVector ++ rtd.clusters.toVector).sortWith((a, b) => a._2 > b._2)
 				.foldLeft(TDigest.empty(delta))((d, e) => d + e)
+		}
+	}
+
+	def combineRandom = {
+		def combine(ltd: TDigest, rtd: TDigest): TDigest = {
+			// randomly shuffle input clusters and re-insert to a new t-digest
+			shuffle(ltd.clusters.toVector ++ rtd.clusters.toVector)
+				.foldLeft(TDigest.empty)((d, e) => d + e)
 		}
 	}
 
@@ -214,11 +224,24 @@ object AlgebirdFactoryRunner extends App {
 	println("\nindices: ")
 	ind.foreach(v => println(v))*/
 
+	/*def colorBy(fn: Double => Color): BoxRenderer = new BoxRenderer {
+		/*def render(plot: Plot, extent: Extent, category: Bar): Drawable =
+			Rect(extent) filled fn(category.values.head)*/
+
+		def render(plot: Plot, extent: Extent, summary: BoxRenderer.BoxRendererContext): Drawable = ???
+	}*/
+	val bx1 = Some(BoxRenderer.default(Some(fireBrick.lighten(40)), Some(fireBrick), None/*, strokeWidth = Some(10)*/))
+	val bx2 = Some(BoxRenderer.default(Some(dodgerBlue.lighten(40)), Some(dodgerBlue), None/*, Some(3)*/))
+
 	displayPlot(
 		Overlay(
-			BoxPlot(brok).standard(xLabels = (1 to 10).map(_.toString)),
-			BoxPlot(ord).standard(xLabels = (1 to 10).map(_.toString))
-		).xAxis().yAxis().render()
+			BoxPlot(data = brok, boxRenderer = bx1),
+			BoxPlot(data =ord, boxRenderer = bx2) //.standard(xLabels = (1 to 10).map(_.toString))
+		).xAxis()
+			.yAxis()
+			.standard(xLabels = (1 to 10).map(_.toString))
+			.frame()
+			.render()
 	)
 
 	/*
