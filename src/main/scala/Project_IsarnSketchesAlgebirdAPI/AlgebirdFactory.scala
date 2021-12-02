@@ -247,18 +247,16 @@ object experiment {
 			// NOTE: monoidal addition as defined in the original paper (bad def)
 			val oldDef: BrokenTDigestAdd = data
 				.map((distSample: Vector[Double]) => TDigest.sketch(distSample)) //vec of tdigests
-				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) =>
-					combine(ltd, rtd, GOOD_DEF = false))
+				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => combine(ltd, rtd, GOOD_DEF = false))
 				.drop(1)
-				.map((tdigest: TDigest) => kolmogorovSmirnovDStatistic(tdigest, contDist)) // vector of doubles KSDs
+				.map((td: TDigest) => kolmogorovSmirnovDStatistic(td, contDist)) // vector of doubles KSDs
 
 			// NOTE: experimental definition where clusters are inserted from largest to smallest
 			val fixedDef: OrderedTDigestAdd = data
 				.map((distSample: Vector[Double]) => TDigest.sketch(distSample)) //vec of tdigests
-				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) =>
-					combine(ltd, rtd, GOOD_DEF = true))
+				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => combine(ltd, rtd, GOOD_DEF = true))
 				.drop(1)
-				.map((tdigest: TDigest) => kolmogorovSmirnovDStatistic(tdigest, contDist)) // vector
+				.map((td: TDigest) => kolmogorovSmirnovDStatistic(td, contDist)) // vector
 
 			(oldDef, fixedDef)
 		}
