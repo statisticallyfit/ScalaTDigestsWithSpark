@@ -11,13 +11,12 @@ package Project_IsarnSketchesAlgebirdAPI
  * (2) http://erikerlandson.github.io/blog/2016/12/19/converging-monoid-addition-for-t-digest/
  */
 
-import breeze.stats.distributions.Rand.FixedSeed.randBasis
-import breeze.stats.distributions.{Density, Poisson, Rand}
+
 import com.twitter.algebird.{Aggregator, Monoid, MonoidAggregator}
 import org.isarnproject.collections.mixmaps.ordered.tree.DataMap
 import org.isarnproject.sketches.tdmap.tree.INodeTD
 import org.isarnproject.sketches.TDigest
-import org.json4s.JObject
+
 
 import scala.util.Random
 import com.cibo.evilplot._
@@ -25,6 +24,11 @@ import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.renderers.BoxRenderer
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import com.cibo.evilplot.colors.HTMLNamedColors.{dodgerBlue, fireBrick, red}
+
+
+//import org.apache.commons.math3.distribution._
+import util.DistributionExtensions._
+
 
 /**
  * Factory functions for generating Algebird objects based on TDigest
@@ -67,35 +71,8 @@ object AlgebirdFactory {
 		Aggregator.appendMonoid((t: TDigest, x: N) => t + x)(tDigestMonoid(delta))
 }
 
-import java.io._
-
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-
-import org.apache.commons.math3.distribution._
 
 
-/*object OrganizeDists {
-
-	/*trait Distr[T]
-	trait IntDist[T] extends IntegerDistribution with Distr[T]
-	trait RealDist[T] extends RealDistribution with Distr[T]*/
-
-	type DistType[T] = (Option[IntegerDistribution], Option[RealDistribution])
-
-	def getDistType[T: Numeric](dist: DistType[T]) = {
-
-		dist match {
-			//case (si, sr) => None
-			case (Some(intDist : IntegerDistribution), None) => {
-				//assert(typeO) // TODO assert T is Int
-				(Int, intDist)
-			}
-			case (None, Some(realDist : RealDistribution)) => (Double, realDist) // TODO assert T is double?
-			case (_, _) => None
-		}
-	}
-}*/
 
 
 object experiment {
@@ -175,7 +152,15 @@ object experiment {
 
 
 	// Kolmogorov-Smirnov D statistic
-	def kolmogorovSmirnovDStatistic(td: TDigest, continuousDist: RealDistribution): Double = {
+	def kolmogorovSmirnovDStatistic[T: Numeric](td: TDigest, dist: Distribution[T]): Double = {
+		val xmin: Double = td.clusters.keyMin.get
+		val xmax: Double = td.clusters.keyMax.get
+		val step: Double = (xmax - xmin) / 1000.0
+		val d: Double = (xmin to xmax by step).iterator
+			.map(x => math.abs(td.cdf(x) - dist.cumulativeProbability(x))).max
+		d
+	}
+	/*def kolmogorovSmirnovDStatistic(td: TDigest, continuousDist: RealDistribution): Double = {
 		val xmin: Double = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
 		val step: Double = (xmax - xmin) / 1000.0
@@ -193,7 +178,7 @@ object experiment {
 		val d: Double = (xmin to xmax by step).iterator
 			.map(x => math.abs(td.cdf(x) - discreteDist.cumulativeProbability(x.toInt))).max
 		d
-	}
+	}*/
 
 
 	//import scala.reflect.runtime.universe._

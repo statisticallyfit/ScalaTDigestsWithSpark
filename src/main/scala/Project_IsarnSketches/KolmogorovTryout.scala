@@ -20,37 +20,36 @@ import org.apache.commons.math3.distribution.{GammaDistribution, GeometricDistri
 
 object KolmogorovTryout {
 
+	val N = 10000
 
 	def generateShortRange(dist: IntegerDistribution) = {
 		val xmin = dist.inverseCumulativeProbability(0).toDouble
 		val xmax = dist.inverseCumulativeProbability(1).toDouble
 
-		val n = 1000
+		val step = (xmax - xmin) / N.toDouble // TODO why n = 1000? To change?
 
-		val step = (xmax - xmin) / n.toDouble // TODO why n = 1000? To change?
-
-		val xvals = xmin to xmax by step
+		val xvals = xmin until xmax by step
 
 		xvals.map(x => dist.cumulativeProbability(x.toInt))
+			.takeWhile(x => x != 1.0) :+ 1.0
 	}
 
 	def generateLongRange(dist: IntegerDistribution) = {
 		val xmin = dist.inverseCumulativeProbability(0).toDouble
 		val xmax = 1000.0
 
-		val n = 1000
+		val step = (xmax - xmin) / N.toDouble
 
-		val step = (xmax - xmin) / n.toDouble
-
-		val xvals = xmin to xmax by step
+		val xvals = xmin until xmax by step
 
 		xvals.map(x => dist.cumulativeProbability(x.toInt))
+			.takeWhile(x => x != 1.0) :+ 1.0
 	}
 
 
 	def main(args: Array[String]) {
-		println(generateShortRange(new PoissonDistribution(8.3)))
-		println(generateLongRange(new PoissonDistribution(8.3)))
+		println(generateShortRange(new PoissonDistribution(3)))
+		println(generateLongRange(new PoissonDistribution(3)))
 	}
 
 }
