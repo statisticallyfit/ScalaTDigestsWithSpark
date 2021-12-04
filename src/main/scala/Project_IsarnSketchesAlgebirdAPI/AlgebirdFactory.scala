@@ -149,16 +149,19 @@ object experiment {
 	final val N_SUMS: Int = 100
 	final val SUM_SAMPLE: Int = 50 // 10
 
-
+	import util.DistributionExtensions._
+	import util.DistributionExtensions.DistSyntax
 
 	// Kolmogorov-Smirnov D statistic
 	def kolmogorovSmirnovDStatistic[T: Numeric](td: TDigest, dist: Distribution[T]): Double = {
 		val xmin: Double = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
+
+
 		val step: Double = (xmax - xmin) / 1000.0
 		val d: Double = (xmin to xmax by step).iterator
 			.map(x => math.abs(td.cdf(x) - dist.cumulativeProbability(x))).max
-		d
+		d // TODO make Distribution[T] type have cdf accessible
 	}
 	/*def kolmogorovSmirnovDStatistic(td: TDigest, continuousDist: RealDistribution): Double = {
 		val xmin: Double = td.clusters.keyMin.get
