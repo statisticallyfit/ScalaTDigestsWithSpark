@@ -150,10 +150,10 @@ object experiment {
 	final val SUM_SAMPLE: Int = 50 // 10
 
 	import util.DistributionExtensions._
-	import util.DistributionExtensions.DistSyntax
+
 
 	// Kolmogorov-Smirnov D statistic
-	def kolmogorovSmirnovDStatistic[T: Numeric](td: TDigest, dist: Distribution[T]): Double = {
+	def kolmogorovSmirnovDStatistic[T: Numeric](td: TDigest, dist: Dist[T]): Double = {
 		val xmin: Double = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
 

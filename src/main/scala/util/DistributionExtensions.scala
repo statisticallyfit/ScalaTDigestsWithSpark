@@ -10,134 +10,80 @@ import org.apache.commons.math3.distribution.{BinomialDistribution, ExponentialD
 object DistributionExtensions {
 
 	trait CDF[T, D] {
-		def getDistFromCDFArea(d: D): D // NOTE: this functions not necessary for the experiment of making
+		//def getDistFromCDFArea(d: D): D // NOTE: this functions not necessary for the experiment of making
 		// AbsDist[T] callable with .cdf
 		def cumulativeProbability(d: D, x: T): Double
 	}
-	trait AbsDist[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
+	trait Dist[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
 		def getDist: D
 	}
+	trait ContinuousDist[D] extends Dist[Double, D]
+	trait DiscreteDist[D] extends Dist[Int, D]
 
-	trait Distribution[T]  {
-		def cdf(x: T): Double
-	}
 
-	//trait ContinuousDistribution[D] extends Distribution[Double, D]
-	//trait DiscreteDistribution[D] extends Distribution[Int, D]
-
-	// TODO why not seeing that I implement the cdf method? study linalg typeclasses better
-	//trait Pois extends ContinuousDistribution[Pois]
-	case class PoissonDist(lambda: Double) extends PoissonDistribution(lambda)
-		with Distribution[Int] {
-
-		override def cdf(x: Int): Double = new PoissonDistribution(lambda).cumulativeProbability(x)
-	}
-
-	case class PoisAbsDist(lambda: Double) extends PoissonDistribution(lambda)	with AbsDist[Int, PoisAbsDist]
-	{ def getDist: PoisAbsDist = this }
-	/*case class BinomialDist(numTrials: Int, p: Double) extends BinomialDistribution(numTrials, p)
-		with	DiscreteDistribution
+	case class PoissonDist(lambda: Double) extends PoissonDistribution(lambda)	with DiscreteDist[PoissonDist]
+	{ def getDist: PoissonDist = this }
+	case class BinomialDist(numTrials: Int, p: Double) extends BinomialDistribution(numTrials, p)
+		with DiscreteDist[BinomialDist] { def getDist: BinomialDist = this }
 	case class GeometricDist(p: Double) extends GeometricDistribution(p)
-		with	DiscreteDistribution
+		with DiscreteDist[GeometricDist] { def getDist: GeometricDist = this }
 
 	case class GammaDist(shape: Double, scale: Double) extends GammaDistribution(shape, scale)
-		with ContinuousDistribution
+		with ContinuousDist[GammaDist] { def getDist: GammaDist = this }
 	case class NormalDist(mu: Double, std: Double) extends NormalDistribution(mu, std)
-		with ContinuousDistribution
-	case class ExponentialDist(mean: Double) extends ExponentialDistribution(mean)
-		with ContinuousDistribution
-	case class UniformContinDist(a: Double, b: Double) extends UniformRealDistribution(a, b)
-		with ContinuousDistribution
+		with ContinuousDist[NormalDist] { def getDist: NormalDist = this }
+	case class UniformContinuousDist(a: Double, b: Double) extends UniformRealDistribution(a, b)
+		with ContinuousDist[UniformContinuousDist] { def getDist: UniformContinuousDist = this }
 	case class GumbelDist(mu: Double, beta: Double) extends GumbelDistribution(mu, beta)
-		with ContinuousDistribution*/
+		with ContinuousDist[GumbelDist] { def getDist: GumbelDist = this }
 
 
-	// NOTE: put the cdf() in the distribution trait, and just use syntax to call the .cdf() on each distribution[T]
-	//  type.
-	/*object Pois {
-
-		/*implicit def poissonDist(lambda: Double): AbstractDistribution[Int] = (x: Int) => new PoissonDistribution(lambda)
-			.cumulativeProbability(x)*/
-		implicit def poissonCDF(lambda: Double): CDF[Int] = new CDF[Int] {
-			def cdf(x: Int): Double = new PoissonDistribution(lambda).cumulativeProbability(x)
+	object PoissonDist {
+		// NOTE: used for the testUsage_CDFTD version
+		implicit def poissonHasCDF = new CDF[Int, PoissonDist] {
+			def cumulativeProbability(d: PoissonDist, x: Int): Double = d.cumulativeProbability(x)
 		}
-	}*/
 
 
+		//NOTE: this is the implementation that makes PoisAbsDist().cdf(_) work at last!!!
+		// NOTE: used for the testUsage_CDFTATD version
+		implicit def poissonDistHasCDF: CDF[Int, Dist[Int, PoissonDist]] = new CDF[Int, Dist[Int, PoissonDist]] {
 
-	/*implicit class DistOps[T: Numeric, D](current: Distribution[T])(implicit ev: CDF[T]) {
-		def cdf(x: T): Double = ev.cdf(x)
-	}*/
-	/*implicit def poissonCDF(lambda: Double): CDF[Pois] = new CDF[Pois] {
-		def cdf(x: Int): Double = Pois(lambda).cumulativeProbability(x)
-	}
-
-	implicit val studentPrinter: Printer[StudentId] = new Printer[StudentId] {
-		def getString(a: StudentId): String = s"StudentId: ${a.id}"
-	}*/
-
-	// TODO left off here - how to structure this so that
-	// 1) can pa in a distribution when saying Dist[T]
-	// 2) can call .cdf() on any Dist[T]?
-
-
-
-	/*trait DistSyntax {
-		implicit class DistOps[T: Numeric, D](current: D)(implicit ev: Distribution[T, D]){
-			def cdf(x: T): Double = ev.cumulProb(current, x)
-		}
-	}*/
-
-	/*abstract class PoissonIsDistribution(lambda: Double) extends PoissonDistribution(lambda) with AbsDist[Int,
-		PoissonDistribution]
-
-	class PoissonHasCDF extends CDF[Int, PoissonDistribution] {
-		def cumulativeProbability(d: PoissonDistribution, x: Int): Double = d.cumulativeProbability(x)
-	}*/
-	object PoissonCDF {
-		implicit def poissonHasCDF = new CDF[Int, PoisAbsDist] {
-			def cumulativeProbability(d: PoisAbsDist, x: Int): Double = d.cumulativeProbability(x)
-
-			def getDistFromCDFArea(d: PoisAbsDist): PoisAbsDist = d
+			def cumulativeProbability(d: Dist[Int, PoissonDist], n: Int): Double = {
+				d.getDist.cumulativeProbability(n)
+			}
 		}
 	}
-	import PoissonCDF._
-	/*class PoissonHasCDF extends CDF[Int, PoisAbsDist] {
-		def cumulativeProbability(d: PoisAbsDist, x: Int): Double = d.cumulativeProbability(x)
-	}
-	val v = new PoissonHasCDF */ // TODO look in linalg proj to see if you can make it work this way too
+	import PoissonDist._
 
-
-
-	implicit class CDFSyntax[T: Numeric, D](current: D)(implicit ev: CDF[T, D]){
-		def cdf(x: T): Double = ev.cumulativeProbability(ev.getDistFromCDFArea(current), x)
-	}
-	// TODO why can't call .cdf now for PoisAbsDist(n) ? -- .absdistCDF works
-	// TODO is this class even necessary?
-	//PoisAbsDist(1.2)
-
-	implicit class AbsDistSyntax[T: Numeric, D](absdist: AbsDist[T, D])(implicit ev: CDF[T, D]) {
-		def absdistCDF(x: T): Double = ev.cumulativeProbability(absdist.getDist, x)
-	}
-	// --- .absdistCDF works
-	//PoisAbsDist(1.2).absdistCDF(3)
-
-
-	def testUsage[T: Numeric, D](x: T, distAbs: AbsDist[T, D])(implicit ev: CDF[T, D]): Double = {
-		distAbs.absdistCDF(x)
-
+	object GammaDist {
+		implicit def gammaDistHasCDF: CDF[Double, Dist[Double, GammaDist]] = new CDF[Double, Dist[Double,
+			GammaDist]] {
+			def cumulativeProbability(d: Dist[Double, GammaDist], x: Double): Double = {
+				d.getDist.cumulativeProbability(x)
+			}
+		}
 	}
 
-	// ugly way = with Distribution[T] having the cdf inside which unfortunately makes PoisDist have to re-implement
-	// it inside its class again (totally ugly)
-	def testUsageOfCDF_uglyway[T: Numeric](x: T, distT: Distribution[T]): Double = {
-		distT.cdf(x)
+
+	implicit class CDFSyntax[T: Numeric, D](current: Dist[T, D])(implicit ev: CDF[T, Dist[T, D]]){
+		def cdf(x: T): Double = ev.cumulativeProbability(current, x)
+			//ev.cumulativeProbability(ev.getDistFromCDFArea(current), x)
 	}
 
+
+	def testUsage_CDFTATD[T: Numeric, D](x: T, distAbs: Dist[T, D])(implicit ev: CDF[T, Dist[T, D]]): Double = {
+		//distAbs.absdistCDF(x)
+		distAbs.cdf(x)
+	}
+
+
+	// ===============================================================================================================
 	def main(args: Array[String]) {
-		Console.println(testUsageOfCDF_uglyway[Int](10, PoissonDist(3.4)))
 
-		Console.println(testUsage[Int, PoisAbsDist](10, PoisAbsDist(3.4)))
+		Console.println(testUsage_CDFTATD[Int, PoissonDist](10, PoissonDist(3.4)))
+
+		Console.println(testUsage_CDFTATD[Double, GammaDist](8.4, GammaDist(2, 2)))
 	}
 
 }
