@@ -27,9 +27,12 @@ import com.cibo.evilplot.colors.HTMLNamedColors.{dodgerBlue, fireBrick, red}
 
 
 //import org.apache.commons.math3.distribution._
-import util.DistributionExtensions._
+import util.distributionExtensions.distributions._
+import util.distributionExtensions.instances.AllInstances._
+import util.distributionExtensions.syntax._
 
-
+import scala.reflect.runtime.universe._
+import util.GeneralUtil
 /**
  * Factory functions for generating Algebird objects based on TDigest
  */
@@ -149,70 +152,52 @@ object experiment {
 	final val N_SUMS: Int = 100
 	final val SUM_SAMPLE: Int = 50 // 10
 
-	import util.DistributionExtensions._
+	final val N: Int = 1000
+
+
 
 
 	// Kolmogorov-Smirnov D statistic
-	def kolmogorovSmirnovDStatistic[T: Numeric](td: TDigest, dist: Dist[T]): Double = {
+	def kolmogorovSmirnovDStatistic[T: Numeric: TypeTag, D](td: TDigest, dist: Dist[T, D])
+												(implicit ev: CDF[T, Dist[T, D]]): Double	= {
+
 		val xmin: Double = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
 
+		val step: Double = (xmax - xmin) / N.toDouble
 
-		val step: Double = (xmax - xmin) / 1000.0
-		val d: Double = (xmin to xmax by step).iterator
-			.map(x => math.abs(td.cdf(x) - dist.cumulativeProbability(x))).max
-		d // TODO make Distribution[T] type have cdf accessible
-	}
-	/*def kolmogorovSmirnovDStatistic(td: TDigest, continuousDist: RealDistribution): Double = {
-		val xmin: Double = td.clusters.keyMin.get
-		val xmax: Double = td.clusters.keyMax.get
-		val step: Double = (xmax - xmin) / 1000.0
-		val d: Double = (xmin to xmax by step).iterator
-			.map(x => math.abs(td.cdf(x) - continuousDist.cumulativeProbability(x))).max
-		d
+		val xvals: Seq[T] = GeneralUtil.generateTSeq[T](xmin, xmax, step)
+
+		val ksd: Double = xvals
+			.map(x => math.abs(td.cdf(x) - dist.cdf(x)))
+			.max
+
+		ksd
 	}
 
-	def kolmogorovSmirnovDStatistic(td: TDigest, discreteDist: IntegerDistribution): Double = {
-		val xmin: Double = td.clusters.keyMin.get
-		val xmax: Double = td.clusters.keyMax.get
-		val step: Double = (xmax - xmin) / 1000.0
 
-		// TODO correct the way I convert to Int here? it is discrete cannot take Double
-		val d: Double = (xmin to xmax by step).iterator
-			.map(x => math.abs(td.cdf(x) - discreteDist.cumulativeProbability(x.toInt))).max
-		d
-	}*/
-
-
-	//import scala.reflect.runtime.universe._
-
-	//trait Dist[T] extends Density[T] with Rand[T]
-	//trait DistType[D]
-	//type DistOpt = (Option[IntegerDistribution], Option[RealDistribution])
-	//trait MixDist extends IntegerDistribution with RealDistribution
-
-
-	def collect(mon: Monoid[TDigest], discreteDist: IntegerDistribution) = {
+	def collect[T: Numeric: TypeTag, D](mon: Monoid[TDigest], dist: Dist[T, D])(implicit evCDF: CDF[T, Dist[T, D]],
+														  evSamp: Sampling[T, Dist[T, D]]) = {
 
 		val raw: Vector[(BrokenTDigestAdd, OrderedTDigestAdd)] = Vector.fill(SAMPLE_SIZE) {
-			val data: Vector[Vector[Int]] = Vector.fill(1 + N_SUMS) { Vector.fill(DATA_SIZE) { discreteDist.sample
+			val data: Vector[Vector[T]] = Vector.fill(1 + N_SUMS) { Vector.fill(DATA_SIZE) { dist.sample
 			} }
 
 			// NOTE: monoidal addition as defined in the original paper (bad def)
 			val oldDef: BrokenTDigestAdd = data
-				.map((distSample: Vector[Int]) => TDigest.sketch(distSample)) //vec of tdigests
+				.map((distSample: Vector[T]) => TDigest.sketch(distSample)) //vec of tdigests
 				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) =>
 					combine(ltd, rtd, GOOD_DEF = false))
 				.drop(1)
-				.map((tdigest: TDigest) => kolmogorovSmirnovDStatistic(tdigest, discreteDist)) // vector of doubles KSDs
+				.map((td: TDigest) => kolmogorovSmirnovDStatistic(td, dist)) // vector of doubles KSDs
 
 			// NOTE: experimental definition where clusters are inserted from largest to smallest
 			val fixedDef: OrderedTDigestAdd = data
-				.map((distSample: Vector[Int]) => TDigest.sketch(distSample)) //vec of tdigests
+				.map((distSample: Vector[T]) => TDigest.sketch(distSample)) //vec of tdigests
 				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) =>
 					combine(ltd, rtd, GOOD_DEF = true))
 				.drop(1)
-				.map((tdigest: TDigest) => kolmogorovSmirnovDStatistic(tdigest, discreteDist)) // vector
+				.map((td: TDigest) => kolmogorovSmirnovDStatistic(td, dist)) // vector
 
 			(oldDef, fixedDef)
 		}
@@ -226,48 +211,6 @@ object experiment {
 
 		(oldDefKSDs, fixedDefKSDs, indices)
 	}
-
-	def collect(mon: Monoid[TDigest], contDist: RealDistribution) = {
-
-		val raw: Vector[(BrokenTDigestAdd, OrderedTDigestAdd)] = Vector.fill(SAMPLE_SIZE) {
-			val data: Vector[Vector[Double]] = Vector.fill(1 + N_SUMS) { Vector.fill(DATA_SIZE) { contDist.sample } }
-
-			// NOTE: monoidal addition as defined in the original paper (bad def)
-			val oldDef: BrokenTDigestAdd = data
-				.map((distSample: Vector[Double]) => TDigest.sketch(distSample)) //vec of tdigests
-				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => combine(ltd, rtd, GOOD_DEF = false))
-				.drop(1)
-				.map((td: TDigest) => kolmogorovSmirnovDStatistic(td, contDist)) // vector of doubles KSDs
-
-			// NOTE: experimental definition where clusters are inserted from largest to smallest
-			val fixedDef: OrderedTDigestAdd = data
-				.map((distSample: Vector[Double]) => TDigest.sketch(distSample)) //vec of tdigests
-				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => combine(ltd, rtd, GOOD_DEF = true))
-				.drop(1)
-				.map((td: TDigest) => kolmogorovSmirnovDStatistic(td, contDist)) // vector
-
-			(oldDef, fixedDef)
-		}
-
-		val step: Int = math.max(1, N_SUMS / SUM_SAMPLE)
-		val jvals: Range = 0 to N_SUMS by step // pick out by num monoidal additions
-		val oldDefKSDs: Seq[Seq[Double]] = jvals.map(j => raw.map(_._1(j))) ///jvals.flatMap(j => raw.map(_._1(j)))
-		val fixedDefKSDs: Seq[Seq[Double]] = jvals.map(j => raw.map(_._2(j))) //jvals.flatMap(j => raw.map(_._2(j)))
-		val indices: Seq[Seq[Int]] = jvals.map(j => Vector.fill(SAMPLE_SIZE)(j)) //axis? indices? //jvals.flatMap(j =>
-		// Vector.fill(sampleSize)(j)) //axis? indices?
-
-		(oldDefKSDs, fixedDefKSDs, indices)
-	}
-
-	/*def writeJSON(data: Seq[(BrokenTDigestAdd, OrderedTDigestAdd, Indices)], fname: String) {
-		val json: Seq[JObject] = data.map { case (ref, exp, jv) =>
-			("ref" -> ref) ~ ("exp" -> exp) ~ ("jv" -> jv)
-		}
-		val out: PrintWriter = new PrintWriter(new File(fname))
-		out.println(pretty(render(json)))
-		out.close()
-	}*/
-
 
 	/**
 	 * Runs the experiment to compare convergence of tdigests between broken method and good method, after many
@@ -276,14 +219,17 @@ object experiment {
 	 * Made by @statisticallyfit
 	 * @param dist
 	 */
-	def runExperiment(continuousDist: RealDistribution): Unit = {
+	def runExperiment[T: Numeric: TypeTag, D](dist: Dist[T, D])
+									 (implicit evCdf: CDF[T, Dist[T, D]],
+											 evSamp: Sampling[T, Dist[T, D]]): Unit = {
 
 
 		val (brok, ord, ind): (Seq[Seq[Double]], Seq[Seq[Double]], Seq[Seq[Int]]) = {
-			collect(monoid, continuousDist)
+			collect(monoid, dist)
 		}
 		val (xmin, xmax) = (0, 20) // note: number of monoidal additions, get this number out
-		val (ymin, ymax) = (0, scala.math.max(brok.flatten.max, ord.flatten.max))
+		val (ymin, ymax) = (scala.math.min(brok.flatten.min, ord.flatten.min),
+			scala.math.max(brok.flatten.max, ord.flatten.max))
 
 		// Printing the numerical outputs
 		println("broken:")
@@ -309,41 +255,6 @@ object experiment {
 				.render()
 		)
 	}
-
-	def runExperiment(discreteDist: IntegerDistribution): Unit = {
-
-
-		val (brok, ord, ind): (Seq[Seq[Double]], Seq[Seq[Double]], Seq[Seq[Int]]) = {
-			collect(monoid, discreteDist)
-		}
-		val (xmin, xmax) = (0, 20) // note: number of monoidal additions, get this number out
-		val (ymin, ymax) = (scala.math.min(brok.flatten.min, ord.flatten.min),
-			scala.math.max(brok.flatten.max, ord.flatten.max))
-
-		// Printing the numerical outputs
-		println("broken:")
-		brok.foreach(v => println(v))
-		println("\nordered: ")
-		ord.foreach(v => println(v))
-		println("\nindices: ")
-		ind.foreach(v => println(v))
-
-		val bx1: Some[BoxRenderer] = Some(BoxRenderer.default(Some(red.copy(opacity=0.5)), Some(red), None))
-		val bx2: Some[BoxRenderer] = Some(BoxRenderer.default(Some(dodgerBlue.copy(opacity=0.5)), Some(dodgerBlue), None/*, Some(3)*/))
-
-		displayPlot(
-			Overlay(
-				BoxPlot(data = brok, boxRenderer = bx1),
-				BoxPlot(data = ord, boxRenderer = bx2) //.standard(xLabels = (1 to 10).map(_.toString))
-			)
-				.standard(/*xLabels = (1 to 10).map(_.toString)*/)
-				.xbounds(xmin, xmax)
-				.ybounds(ymin, ymax)
-				.xLabel("Number of Monoidal Additions")
-				.yLabel("Kolmogorov-Smirnov D Statistic")
-				.render()
-		)
-	}
 }
 
 
@@ -353,7 +264,8 @@ object AlgebirdFactoryRunner extends App {
 	import experiment._
 
 	//runExperiment(new ExponentialDistribution(3.5))
-	runExperiment(new PoissonDistribution(8.435))
+	//runExperiment(PoissonDist(8.435))
+	runExperiment(GammaDist(2, 2))
 
 }
 

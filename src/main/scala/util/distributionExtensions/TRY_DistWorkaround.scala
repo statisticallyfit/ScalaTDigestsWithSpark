@@ -1,12 +1,6 @@
-package util
+package util.distributionExtensions
 
-/**
- *
- */
-
-
-import org.apache.commons.math3.distribution.{BinomialDistribution, ExponentialDistribution, GammaDistribution, GeometricDistribution, GumbelDistribution, NormalDistribution, PoissonDistribution, UniformRealDistribution}
-
+import org.apache.commons.math3.distribution.PoissonDistribution
 
 /**
  * GOAL: have a supertype Distribution[T] and also the functionality of all distributions (cdf, pdf, sample, ...)
@@ -15,14 +9,16 @@ object TRY_DistWorkaround {
 
 	trait CDF[T, D] {
 		def getDistFromCDFArea(d: D): D // NOTE: this functions not necessary for the experiment of making
+
 		// AbsDist[T] callable with .cdf
 		def cumulativeProbability(d: D, x: T): Double
 	}
-	trait AbsDist[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
+
+	trait AbsDist[T, D] /*extends CDF[T, AbsDist[T, D]]*/ {
 		def getDist: D
 	}
 
-	trait Distribution[T]  {
+	trait Distribution[T] {
 		def cdfViaDist(x: T): Double
 	}
 
@@ -37,8 +33,9 @@ object TRY_DistWorkaround {
 		override def cdfViaDist(x: Int): Double = new PoissonDistribution(lambda).cumulativeProbability(x)
 	}
 
-	case class PoisAbsDist(lambda: Double) extends PoissonDistribution(lambda)	with AbsDist[Int, PoisAbsDist]
-	{ def getDist: PoisAbsDist = this }
+	case class PoisAbsDist(lambda: Double) extends PoissonDistribution(lambda) with AbsDist[Int, PoisAbsDist] {
+		def getDist: PoisAbsDist = this
+	}
 	/*case class BinomialDist(numTrials: Int, p: Double) extends BinomialDistribution(numTrials, p)
 		with	DiscreteDistribution
 	case class GeometricDist(p: Double) extends GeometricDistribution(p)
@@ -68,7 +65,6 @@ object TRY_DistWorkaround {
 	}*/
 
 
-
 	/*implicit class DistOps[T: Numeric, D](current: Distribution[T])(implicit ev: CDF[T]) {
 		def cdf(x: T): Double = ev.cdf(x)
 	}*/
@@ -83,7 +79,6 @@ object TRY_DistWorkaround {
 	// TODO left off here - how to structure this so that
 	// 1) can pa in a distribution when saying Dist[T]
 	// 2) can call .cdf() on any Dist[T]?
-
 
 
 	/*trait DistSyntax {
@@ -117,13 +112,14 @@ object TRY_DistWorkaround {
 			}
 		}
 	}
+
 	import PoisAbsDist._
 
 	/*implicit class CDFSyntax[T: Numeric, D, P[_,_]](current: P[T, D])(implicit ev: CDF[T, P[T, D]]){
 		def cdf(x: T): Double = ev.cumulativeProbability(ev.getDistFromCDFArea(current), x)
 	}*/
 	//PoisAbsDist(1.2).cdf(3) // --works this way, too but preferred to use below definition:
-	implicit class CDFSyntax[T: Numeric, D](current: AbsDist[T, D])(implicit ev: CDF[T, AbsDist[T, D]]){
+	implicit class CDFSyntax[T: Numeric, D](current: AbsDist[T, D])(implicit ev: CDF[T, AbsDist[T, D]]) {
 		def cdf(x: T): Double = ev.cumulativeProbability(ev.getDistFromCDFArea(current), x)
 	}
 	//PoisAbsDist(1.2).cdf(3)

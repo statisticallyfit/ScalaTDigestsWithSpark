@@ -1,7 +1,9 @@
 package Project_IsarnSketches
 
-import org.apache.commons.math3.distribution.IntegerDistribution
-import org.apache.commons.math3.distribution.{GammaDistribution, GeometricDistribution, GumbelDistribution, PoissonDistribution}
+import util.distributionExtensions.distributions._
+import util.distributionExtensions.instances.AllInstances._
+import util.distributionExtensions.syntax._
+
 /**
  * TODO: genate values from 0 -> infinity (cdf fro this range) and compare to cdf of values from 0 -> 1 (cdfinversed)
  * -- see the isarn-sketches-spark KSD function.
@@ -16,40 +18,49 @@ import org.apache.commons.math3.distribution.{GammaDistribution, GeometricDistri
  * numbers and the cdf array gets a lot smaller, thus causing less data for the tdigest test in isarn-sketches-spark,
  * and is why the discrete dists have smaller-sized tdigest arrays than the continuous ones.
  */
-
+import scala.reflect.runtime.universe._
+import scala.math.Numeric.Implicits._
+import util.GeneralUtil
 
 object KolmogorovTryout {
 
 	val N = 10000
 
-	def generateShortRange(dist: IntegerDistribution) = {
-		val xmin = dist.inverseCumulativeProbability(0).toDouble
-		val xmax = dist.inverseCumulativeProbability(1).toDouble
 
-		val step = (xmax - xmin) / N.toDouble // TODO why n = 1000? To change?
 
-		val xvals = xmin until xmax by step
+	// Assume: T == Integer (for integer distribution)
+	def generateShortRange[/*T: Numeric: TypeTag, */D](dist: DiscreteDist[D])
+											(implicit evCdf: CDF[Int, DiscreteDist[D]]): Seq[Double]
+	= {
+		val xmin = dist.inverseCdf(0)
+		val xmax = dist.inverseCdf(1)
 
-		xvals.map(x => dist.cumulativeProbability(x.toInt))
+		//val evNum = implicitly[Numeric[T]]
+		//val step = (xmax - xmin) / N.toDouble
+
+		val xvals: Seq[Int] = GeneralUtil.generateTSeq[Int](xmin, xmax)
+
+		xvals
+			.map(x => dist.cdf(x))
 			.takeWhile(x => x != 1.0) :+ 1.0
 	}
 
-	def generateLongRange(dist: IntegerDistribution) = {
-		val xmin = dist.inverseCumulativeProbability(0).toDouble
-		val xmax = 1000.0
+	def generateLongRange[D](dist: DiscreteDist[D])(implicit evCdf: CDF[Int, DiscreteDist[D]]): Seq[Double] = {
+		val xmin = dist.inverseCdf(0)
+		val xmax = 1000
 
-		val step = (xmax - xmin) / N.toDouble
+		//val step = (xmax - xmin) / N.toDouble
 
-		val xvals = xmin until xmax by step
+		val xvals: Seq[Int] = GeneralUtil.generateTSeq[Int](xmin, xmax)
 
-		xvals.map(x => dist.cumulativeProbability(x.toInt))
+		xvals.map(x => dist.cdf(x))
 			.takeWhile(x => x != 1.0) :+ 1.0
 	}
 
 
 	def main(args: Array[String]) {
-		println(generateShortRange(new PoissonDistribution(3)))
-		println(generateLongRange(new PoissonDistribution(3)))
+		println(generateShortRange(PoissonDist(3)))
+		println(generateLongRange(PoissonDist(3)))
 	}
 
 }
