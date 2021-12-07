@@ -33,7 +33,7 @@ object GeneralUtil {
 
 
 	// Just for sake of the argument: going to use this to make a sequence of T values at runtime
-	def convertToT[T: Numeric](x: T): T = {
+	/*def convertToT[T: Numeric](x: T): T = {
 		val result = new java.lang.Double(implicitly[Numeric[T]].toDouble(x))
 		(x match {
 			case x: Double => result
@@ -41,10 +41,7 @@ object GeneralUtil {
 			case x: Float => result.toFloat
 			case x: Long => result.toLong
 		}).asInstanceOf[T]
-	}
-
-
-
+	}*/
 
 
 	// NOTE: source here https://stackoverflow.com/a/27213057 for generateTSeq

@@ -14,7 +14,7 @@ import org.apache.commons.math3.distribution.{BinomialDistribution, ExponentialD
  */
 object distributions {
 
-	trait CDF[T, D/* <: Dist[T, D]*/] {
+	trait CDF[T, D] {
 		//def getDistFromCDFArea(d: D): D // NOTE: this functions not necessary for the experiment of making
 		// AbsDist[T] callable with .cdf
 		def cumulativeProbability(d: D, x: T): Double

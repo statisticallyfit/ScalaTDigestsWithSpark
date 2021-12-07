@@ -33,7 +33,7 @@ object KolmogorovTryout {
 											(implicit evCdf: CDF[Int, DiscreteDist[D]]): Seq[Double]
 	= {
 		val xmin = dist.inverseCdf(0)
-		val xmax = dist.inverseCdf(1)
+		val xmax = dist.inverseCdf(1) - 100000
 
 		//val evNum = implicitly[Numeric[T]]
 		//val step = (xmax - xmin) / N.toDouble

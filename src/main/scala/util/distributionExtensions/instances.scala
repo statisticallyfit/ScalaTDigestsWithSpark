@@ -17,8 +17,6 @@ object instances {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		// TODO: try to avoid this repetition - try to declare CDF[T, D, P[_,_]]?
-		// MOTIVation: the shortrange-longrange functions in kolmogorovtryout
 		implicit def poissonDiscreteDistHasCDF: CDF[Int, DiscreteDist[PoissonDist]] = new CDF[Int,
 			DiscreteDist[PoissonDist]] {
 
@@ -29,6 +27,18 @@ object instances {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
+		// TODO: try to avoid this repetition - try to declare CDF[T, D, P[_,_]]?
+		// MOTIVation: the shortrange-longrange functions in kolmogorovtryout
+		/*implicit def poissonDiscreteDistHasCDF[P[_] <: Dist[Int, PoissonDist]]: CDF[Int, P[PoissonDist]] = new
+				CDF[Int, P[PoissonDist]] {
+
+			def cumulativeProbability(d: P[PoissonDist], n: Int): Double = {
+				d.getDist.cumulativeProbability(n)
+			}
+			def inverseCumulativeProbability(d: P[PoissonDist], p: Double): Int = {
+				d.getDist.inverseCumulativeProbability(p)
+			}
+		}*/
 		/*implicit def poissonDistHasCDF: CDF[Int, PoissonDist] = new CDF[Int, PoissonDist] {
 
 			def cumulativeProbability(d: Dist[Int, PoissonDist], n: Int): Double = {
