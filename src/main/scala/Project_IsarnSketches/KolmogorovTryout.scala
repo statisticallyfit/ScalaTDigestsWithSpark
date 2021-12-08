@@ -30,28 +30,28 @@ object KolmogorovTryout {
 
 	// Assume: T == Integer (for integer distribution)
 	def generateShortRange[/*T: Numeric: TypeTag, */D](dist: DiscreteDist[D])
-											(implicit evCdf: CDF[Int, DiscreteDist[D]]): Seq[Double]
+											(implicit evCdf: CDF[IntZ, DiscreteDist[D]]): Seq[Double]
 	= {
 		val xmin = dist.inverseCdf(0)
-		val xmax = dist.inverseCdf(1) - 100000
+		val xmax = BigInt(1000000)
 
 		//val evNum = implicitly[Numeric[T]]
 		//val step = (xmax - xmin) / N.toDouble
 
-		val xvals: Seq[Int] = GeneralUtil.generateTSeq[Int](xmin, xmax)
+		val xvals: Seq[IntZ] = GeneralUtil.generateTSeq[IntZ](xmin, xmax)
 
 		xvals
 			.map(x => dist.cdf(x))
 			.takeWhile(x => x != 1.0) :+ 1.0
 	}
 
-	def generateLongRange[D](dist: DiscreteDist[D])(implicit evCdf: CDF[Int, DiscreteDist[D]]): Seq[Double] = {
+	def generateLongRange[D](dist: DiscreteDist[D])(implicit evCdf: CDF[IntZ, DiscreteDist[D]]): Seq[Double] = {
 		val xmin = dist.inverseCdf(0)
-		val xmax = 1000
+		val xmax = BigInt(1000)
 
 		//val step = (xmax - xmin) / N.toDouble
 
-		val xvals: Seq[Int] = GeneralUtil.generateTSeq[Int](xmin, xmax)
+		val xvals: Seq[IntZ] = GeneralUtil.generateTSeq[IntZ](xmin, xmax)
 
 		xvals.map(x => dist.cdf(x))
 			.takeWhile(x => x != 1.0) :+ 1.0
@@ -59,8 +59,9 @@ object KolmogorovTryout {
 
 
 	def main(args: Array[String]) {
-		println(generateShortRange(PoissonDist(3)))
 		println(generateLongRange(PoissonDist(3)))
+		println(generateShortRange(PoissonDist(3)))
+
 	}
 
 }

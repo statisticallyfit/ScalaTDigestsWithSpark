@@ -14,11 +14,15 @@ import org.apache.commons.math3.distribution.{BinomialDistribution, ExponentialD
  */
 object distributions {
 
+	type IntZ = BigInt // integers
+	type Real = BigDecimal // real numbers
+
+
 	trait CDF[T, D] {
 		//def getDistFromCDFArea(d: D): D // NOTE: this functions not necessary for the experiment of making
 		// AbsDist[T] callable with .cdf
-		def cumulativeProbability(d: D, x: T): Double
-		def inverseCumulativeProbability(d: D, p: Double): T
+		def cumProb(d: D, x: T): Double
+		def invCumProb(d: D, p: Double): T
 	}
 	trait Sampling[T, D] {
 		def sampleDist(d: D, n: Int): Seq[T]
@@ -26,8 +30,8 @@ object distributions {
 	trait Dist[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
 		def getDist: D
 	}
-	trait ContinuousDist[D] extends Dist[Double, D]
-	trait DiscreteDist[D] extends Dist[Int, D]
+	trait ContinuousDist[D] extends Dist[Real, D]
+	trait DiscreteDist[D] extends Dist[IntZ, D]
 
 
 	case class PoissonDist(lambda: Double) extends PoissonDistribution(lambda)	with DiscreteDist[PoissonDist]

@@ -20,9 +20,9 @@ object Tester {
 	// ===============================================================================================================
 	def main(args: Array[String]) {
 
-		testUsage_CDFTATD[Int, PoissonDist](10, PoissonDist(3.4))
+		testUsage_CDFTATD[IntZ, PoissonDist](10, PoissonDist(3.4))
 
-		testUsage_CDFTATD[Double, GammaDist](8.4, GammaDist(2, 2))
+		testUsage_CDFTATD[Real, GammaDist](8.4, GammaDist(2, 2))
 
 	}
 

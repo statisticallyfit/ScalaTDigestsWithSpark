@@ -164,12 +164,12 @@ object experiment {
 		val xmin: Double = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
 
-		val step: Double = (xmax - xmin) / N.toDouble
+		//val step: Double = (xmax - xmin) / N.toDouble
 
-		val xvals: Seq[T] = GeneralUtil.generateTSeq[T](xmin, xmax, step)
+		val xvals: Seq[T] = GeneralUtil.generateTSeq[T](xmin, xmax)
 
 		val ksd: Double = xvals
-			.map(x => math.abs(td.cdf(x) - dist.cdf(x)))
+			.map(x => math.abs(td.cdf(x) - dist.cdf(x))) //TODO bigdecimal alert
 			.max
 
 		ksd
