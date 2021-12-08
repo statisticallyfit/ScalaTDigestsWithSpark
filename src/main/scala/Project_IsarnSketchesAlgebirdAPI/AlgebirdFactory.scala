@@ -161,11 +161,11 @@ object experiment {
 	def kolmogorovSmirnovDStatistic[T: Numeric: TypeTag, D](td: TDigest, dist: Dist[T, D])
 												(implicit ev: CDF[T, Dist[T, D]]): Double	= {
 
-		val xmin: Double = td.clusters.keyMin.get
+		val xmin = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
 
 		//val step: Double = (xmax - xmin) / N.toDouble
-
+		println(typeOf[T].toString)
 		val xvals: Seq[T] = GeneralUtil.generateTSeq[T](xmin, xmax)
 
 		val ksd: Double = xvals
