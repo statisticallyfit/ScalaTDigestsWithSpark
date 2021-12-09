@@ -12,6 +12,7 @@ object Tester {
 	def testUsage_CDFTATD[T: Numeric, D](x: T, distTD: Dist[T, D])(implicit ev1: CDF[T, Dist[T, D]],
 													   ev2: Sampling[T, Dist[T, D]]): Unit = {
 		//distAbs.absdistCDF(x)
+		println(distTD.toString)
 		println(distTD.cdf(x))
 		println(distTD.sample(3))
 	}

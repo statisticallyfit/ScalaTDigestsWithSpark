@@ -165,7 +165,7 @@ object experiment {
 		val xmax: Double = td.clusters.keyMax.get
 
 		//val step: Double = (xmax - xmin) / N.toDouble
-		println(typeOf[T].toString)
+		//println(typeOf[T].toString)
 		val xvals: Seq[T] = GeneralUtil.generateTSeq[T](xmin, xmax)
 
 		val ksd: Double = xvals
@@ -265,7 +265,8 @@ object AlgebirdFactoryRunner extends App {
 
 	//runExperiment(new ExponentialDistribution(3.5))
 	//runExperiment(PoissonDist(8.435))
-	runExperiment(GammaDist(2, 2))
+	//runExperiment(GammaDist(2, 2))
+	runExperiment(GumbelDist(2.1, 5.5))
 
 }
 
