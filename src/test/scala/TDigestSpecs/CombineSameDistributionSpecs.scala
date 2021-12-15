@@ -27,6 +27,7 @@ object TestData {
 
 	// Kolmogorov Smirnov epsilon limit bound
 	final val EPSILON: Double = 0.02 // value copied from isarn-sketches-spark tests
+	final val EPSILON_T: (Double, Double) = (EPSILON, EPSILON)
 
 	//Simple identifier to keep track of which test is running
 	var TEST_ID: (Int, Char) = (0, 'a')
@@ -64,6 +65,10 @@ object TestTools {
 
 		val kst = new org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest()
 		val d: Double = kst.kolmogorovSmirnovStatistic(tdSamples, distSamplesDouble)
+
+
+		// debug
+		println(s"ksd (sample) = $d")
 
 		d
 	}
@@ -111,11 +116,24 @@ object TestTools {
 		println(s"xmin = $xmin, xmax = $xmax)  |  xvals = [${xvals.take(5)}, ..., ${xvals.drop(xvals.length - 5)}]")
 		println(s"xvals.length = ${xvals.length}")
 		println(s"tdigest size = ${tdgst.nclusters}") //size
-		println(s"ksd = $ksd")
+		println(s"ksd (cdf) = $ksd")
 		println("----------------------------------------------------------------------------------------")
 
 		ksd
 	}
+
+	def kolmogorovSmirnovD[T: Numeric: TypeTag, D](tdgst: TDigest, dist: Dist[T, D])
+										 (implicit evCdf: CDF[T, Dist[T, D]],
+										  evSmp: Sampling[T, Dist[T, D]]): (Double, Double) = {
+
+		val ksdCdf = kolmogorovSmirnovCdfD(tdgst, dist)
+		val ksdSample = kolmogorovSmirnovSampleD(tdgst, dist)
+
+		(ksdCdf, ksdSample)
+
+	}
+
+
 }
 import TestTools._
 
@@ -134,7 +152,9 @@ class TSketchCombineSpecs extends Specification {
 
 			val tdCombine = TDigest.combine(td1, td2)
 
-			kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
+			//kolmogorovSmirnovSampleD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
+			//kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
+			kolmogorovSmirnovD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON_T)
 		}
 
 		"---> combine multiple sketches" in {
@@ -155,16 +175,24 @@ class TSketchCombineSpecs extends Specification {
 				.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
 			// Computing the KSD statistic
-			val ksdsCumulative: Seq[Double] = manyTDSketches
+			/*val ksdsCdfCumul: Seq[Double] = manyTDSketches
 				.map((td: TDigest) => kolmogorovSmirnovCdfD(td, gammaDist))
+			val ksdsSampleCumul: Seq[Double] = manyTDSketches
+				.map((td: TDigest) => kolmogorovSmirnovSampleD(td, gammaDist))
 
-			println(s"ksdsCumulative = $ksdsCumulative")
+			println(s"ksds (cdf) = $ksdsCdfCumul")
+			println(s"ksds (sample) = $ksdsSampleCumul")*/
+
+			val ksdsCumulative: Seq[(Double, Double)] = manyTDSketches
+				.map((td: TDigest) => kolmogorovSmirnovD(td, gammaDist))
+
+			println(s"ksds cumul = $ksdsCumulative")
 			//KSD(tdCombine, GammaDist(2, 8)) should beLessThan(EPS)
 			// First ones won't be below epsilon maybe .. check just the last 5? Where do they start to go below
 			// the EPSILON?  Then graph???
 			ksdsCumulative
 				.drop(NUM_MONOIDAL_ADDITIONS - 5)
-				.map(ksd => ksd should beLessThan(EPSILON)) // checking the last few are converging to below the EPSILON
+				.map(ksd => ksd should beLessThan(EPSILON_T))
 
 		}
 
@@ -186,7 +214,7 @@ class TSketchCombineSpecs extends Specification {
 			// NOTE: so skewed that we need to tweak the amx discrete parameter to get convergence for KSD
 			val tdCombine = TDigest.combine(td1, td2, maxDiscrete = MAX_DISCRETE)
 
-			kolmogorovSmirnovCdfD(tdCombine, PoissonDist(2)) should beLessThan(EPSILON)
+			kolmogorovSmirnovD(tdCombine, PoissonDist(2)) should beLessThan(EPSILON_T)
 		}
 
 		"---> combine multiple sketches" in {
@@ -208,8 +236,8 @@ class TSketchCombineSpecs extends Specification {
 				.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
 			// Computing the KSD statistic
-			val ksdsCumulative: Seq[Double] = manyTDSketches
-				.map((td: TDigest) => kolmogorovSmirnovCdfD(td, poissonDist))
+			val ksdsCumulative: Seq[(Double, Double)] = manyTDSketches
+				.map((td: TDigest) => kolmogorovSmirnovD(td, poissonDist))
 
 			println(s"ksdsCumulative = $ksdsCumulative")
 			//KSD(tdCombine, GammaDist(2, 8)) should beLessThan(EPS)
@@ -217,7 +245,8 @@ class TSketchCombineSpecs extends Specification {
 			// the EPSILON?  Then graph???
 			ksdsCumulative
 				.drop(NUM_MONOIDAL_ADDITIONS - 5)
-				.map(ksd => ksd should beLessThan(EPSILON)) // checking the last few are converging to below the EPSILON
+				.map(ksd => ksd should beLessThan(EPSILON_T)) // checking the last few are converging to below the
+			// EPSILON
 
 		}
 
