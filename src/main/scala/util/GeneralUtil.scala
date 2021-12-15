@@ -60,7 +60,7 @@ object GeneralUtil {
 
 	def generateTSeq[T: TypeTag](xmin: T, xmax: T, N: Int = 1000)(implicit evNum: Numeric[T]): Seq[T] = {
 		val givenXmin: Double = new java.lang.Double(evNum.toDouble(xmin)) //conversion from bigdecimal ---> double
-		val givenXmax: Double = new java.lang.Double(evNum.toDouble(xmax))
+		val givenXmax: Double = new java.lang.Double(evNum.toDouble(xmax)) //TODO necessary to wrap in java double?
 
 		//println(xmin.getClass.getSimpleName)
 

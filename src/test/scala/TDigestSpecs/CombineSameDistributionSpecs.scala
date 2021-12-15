@@ -2,7 +2,8 @@ package TDigestSpecs
 
 
 import TDigestSpecs.TestData.{EPSILON, NUM_MONOIDAL_ADDITIONS, SAMPLE_SIZE, TEST_ID}
-import TDigestSpecs.TestTools.kolmogorovSmirnovD
+import TDigestSpecs.TestTools.kolmogorovSmirnovCdfD
+//import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest
 import org.isarnproject.sketches.TDigest
 //import org.isarnproject.sketches.java.TDigest
 
@@ -43,12 +44,38 @@ import TestData._
 
 object TestTools {
 
+	// Does the test by samples generated from the digest and other distribution
+	// NOTE: same as isarn-sketches `testSamplingPDF` and `testSamplingPMF` = https://github.com/isarn/isarn-sketches/blob/develop/src/test/scala/org/isarnproject/sketches/TDigestTest.scala#L51-L70
 
-	def kolmogorovSmirnovD[T: Numeric : TypeTag, D](tdgst: TDigest,
-										   dist: Dist[T, D],
-										   //testID: (Int, Char) = TEST_ID,
-										   n: Int = 10000)
-										  (implicit evCdf: CDF[T, Dist[T, D]]): Double = {
+	def kolmogorovSmirnovSampleD[T: Numeric: TypeTag, D](tdgst: TDigest, dist: Dist[T, D])
+											  (implicit evCdf: CDF[T, Dist[T, D]],
+											   evSmp: Sampling[T, Dist[T, D]]): Double = {
+
+		// Sample from the t-digest sketch of this distribution
+		val tdSamples: Array[Double] = typeOf[T].toString contains "Int" match { // Int or IntZ
+			case true => Array.fill(SAMPLE_SIZE) {tdgst.samplePMF} // discrete dist
+			case false => Array.fill(SAMPLE_SIZE) {tdgst.samplePDF} // real continuous dist
+		}
+
+		// Sample from the dist itself
+		val distSamples: Seq[T] = dist.sample(SAMPLE_SIZE)
+		val evNum: Numeric[T] = implicitly[Numeric[T]]
+		val distSamplesDouble: Array[Double] = distSamples.map(s => evNum.toDouble(s)).toArray
+
+		val kst = new org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest()
+		val d: Double = kst.kolmogorovSmirnovStatistic(tdSamples, distSamplesDouble)
+
+		d
+	}
+
+
+
+	// Does the test by cdf
+	def kolmogorovSmirnovCdfD[T: Numeric : TypeTag, D](tdgst: TDigest,
+											 dist: Dist[T, D],
+											 //testID: (Int, Char) = TEST_ID,
+											 n: Int = 10000)
+											(implicit evCdf: CDF[T, Dist[T, D]]): Double = {
 		require(tdgst.nclusters > 1) // size == num clusters //require(tdgst.size() > 1)
 		require(n > 0)
 
@@ -107,7 +134,7 @@ class TSketchCombineSpecs extends Specification {
 
 			val tdCombine = TDigest.combine(td1, td2)
 
-			kolmogorovSmirnovD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
+			kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
 		}
 
 		"---> combine multiple sketches" in {
@@ -129,7 +156,7 @@ class TSketchCombineSpecs extends Specification {
 
 			// Computing the KSD statistic
 			val ksdsCumulative: Seq[Double] = manyTDSketches
-				.map((td: TDigest) => kolmogorovSmirnovD(td, gammaDist))
+				.map((td: TDigest) => kolmogorovSmirnovCdfD(td, gammaDist))
 
 			println(s"ksdsCumulative = $ksdsCumulative")
 			//KSD(tdCombine, GammaDist(2, 8)) should beLessThan(EPS)
@@ -159,7 +186,7 @@ class TSketchCombineSpecs extends Specification {
 			// NOTE: so skewed that we need to tweak the amx discrete parameter to get convergence for KSD
 			val tdCombine = TDigest.combine(td1, td2, maxDiscrete = MAX_DISCRETE)
 
-			kolmogorovSmirnovD(tdCombine, PoissonDist(2)) should beLessThan(EPSILON)
+			kolmogorovSmirnovCdfD(tdCombine, PoissonDist(2)) should beLessThan(EPSILON)
 		}
 
 		"---> combine multiple sketches" in {
@@ -182,7 +209,7 @@ class TSketchCombineSpecs extends Specification {
 
 			// Computing the KSD statistic
 			val ksdsCumulative: Seq[Double] = manyTDSketches
-				.map((td: TDigest) => kolmogorovSmirnovD(td, poissonDist))
+				.map((td: TDigest) => kolmogorovSmirnovCdfD(td, poissonDist))
 
 			println(s"ksdsCumulative = $ksdsCumulative")
 			//KSD(tdCombine, GammaDist(2, 8)) should beLessThan(EPS)
