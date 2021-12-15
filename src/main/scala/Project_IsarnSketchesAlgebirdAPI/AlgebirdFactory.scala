@@ -105,6 +105,8 @@ object experiment {
 			.foldLeft(TDigest.empty(delta))((d, e) => d + e)
 	}
 
+	// THe definition of TDigest combine (from isarn-sketches), with ability to differentiate on good / bad type of
+	// combine.
 	def combine(ltd: TDigest, rtd: TDigest,
 			  GOOD_DEF: Boolean = true,
 			  delta: Double = TDigest.deltaDefault): TDigest = {
@@ -126,8 +128,8 @@ object experiment {
 
 			// NOTE: comparing good and bad definitions here.
 			GOOD_DEF match {
-				case true => algoCombineSort(ltd, rtd, delta)
-				case false => algoCombineRandom(ltd, rtd, delta)
+				case true => algoCombineSort(ltd, rtd, delta) // sort before putting in the clusters
+				case false => algoCombineRandom(ltd, rtd, delta) // random cluster entry
 			}
 		}
 	}
@@ -166,7 +168,7 @@ object experiment {
 
 		//val step: Double = (xmax - xmin) / N.toDouble
 		//println(typeOf[T].toString)
-		val xvals: Seq[T] = GeneralUtil.generateTSeq[T](xmin, xmax)
+		val xvals: Seq[T] = GeneralUtil.generateTSeqFromDouble[T](xmin, xmax)
 
 		val ksd: Double = xvals
 			.map(x => math.abs(td.cdf(x) - dist.cdf(x))) //TODO bigdecimal alert

@@ -22,7 +22,7 @@ import scala.reflect.runtime.universe._
 import scala.math.Numeric.Implicits._
 import util.GeneralUtil
 
-object KolmogorovTryout {
+object temp_KolmogorovTryout {
 
 	val N = 10000
 

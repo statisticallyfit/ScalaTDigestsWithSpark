@@ -47,32 +47,30 @@ object GeneralUtil {
 	// NOTE: source here https://stackoverflow.com/a/27213057 for generateTSeq
 	// Could have done @specialized
 
-	def generateTSeq[T: TypeTag](xmin: Double, xmax: Double)(implicit evNum: Numeric[T]): Seq[T] = {
-		//NOTE: assume that T == Real (BigDecimal) because the xmin, xmax are doubles
-		// Goal: intend for this function to just connect smoothly from the KSD in Algebird, where xmin, xmax are
-		// doubels from the keymax cluster number in the tdigest objects
-
-		assert(typeOf[T].toString.split('.').last == "Real")
-
-		val step: Double = (xmax - xmin) / 10000.0
-
-		(BigDecimal(xmin) to xmax by step).map(_.asInstanceOf[T]).asInstanceOf[Seq[T]]
-
+	def generateTSeqFromDouble[T: TypeTag](xmin: Double, xmax: Double, N: Int = 1000)(implicit evNum: Numeric[T])
+	: Seq[T]	= {
+		typeOf[T].toString.split('.').last match {
+			case "IntZ" =>
+				generateTSeq[T](BigInt(xmin.toInt).asInstanceOf[T], BigInt(xmax.toInt).asInstanceOf[T], N)
+			case "Real" =>
+				generateTSeq[T](BigDecimal.valueOf(xmin).asInstanceOf[T],
+					BigDecimal.valueOf(xmax).asInstanceOf[T], N)
+		}
 	}
 
-	def generateTSeq[T: TypeTag](xmin: T, xmax: T)(implicit evNum: Numeric[T]): Seq[T] = {
-		val givenXmin: Double = new java.lang.Double(evNum.toDouble(xmin))
+	def generateTSeq[T: TypeTag](xmin: T, xmax: T, N: Int = 1000)(implicit evNum: Numeric[T]): Seq[T] = {
+		val givenXmin: Double = new java.lang.Double(evNum.toDouble(xmin)) //conversion from bigdecimal ---> double
 		val givenXmax: Double = new java.lang.Double(evNum.toDouble(xmax))
 
 		//println(xmin.getClass.getSimpleName)
 
 		(typeOf[T].toString.split('.').last match {
-			case "IntZ" => (BigInt(givenXmin.toInt) to givenXmax.toInt by 1).map(_.asInstanceOf[T])
+			case "IntZ" => (givenXmin.toInt to givenXmax.toInt by 1).map(x => BigInt(x).asInstanceOf[T])
 			case "Real" => {
 
-				val step: Double = (givenXmax - givenXmin) / 10000.0
+				val step: Double = (givenXmax - givenXmin) / N.toDouble //10000.0
 
-				(BigDecimal(givenXmin) to givenXmax by step).map(_.asInstanceOf[T])
+				(givenXmin to givenXmax by step).map(x => BigDecimal.valueOf(x).asInstanceOf[T])
 			}
 		}).asInstanceOf[Seq[T]]
 	}
