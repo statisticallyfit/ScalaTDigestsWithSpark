@@ -1,7 +1,7 @@
 package TDigestSpecs
 
 
-import TDigestSpecs.TestData.{EPSILON, NUM_MONOIDAL_ADDITIONS, SAMPLE_SIZE, TEST_ID}
+import TDigestSpecs.TestData.{EPSILON_CDF, NUM_MONOIDAL_ADDITIONS, SAMPLE_SIZE, TEST_ID}
 import TDigestSpecs.TestTools.kolmogorovSmirnovCdfD
 //import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest
 import org.isarnproject.sketches.TDigest
@@ -22,13 +22,16 @@ import scala.reflect.runtime.universe._
  */
 object TestData {
 	final val SAMPLE_SIZE: Int = 10000
+	final val SAMPLE_SIZE_LARGE: Int = 100000
 
 	// Number of times to combine the t-digests
 	final val NUM_MONOIDAL_ADDITIONS = 20
 
 	// Kolmogorov Smirnov epsilon limit bound
-	final val EPSILON: Double = 0.02 // value copied from isarn-sketches-spark tests
-	final val EPSILON_T: (Double, Double) = (EPSILON, EPSILON)
+	final val EPSILON_CDF: Double = 0.02 // value copied from isarn-sketches-spark tests
+	final val EPSILON_SMP: Double = 0.05 // value from the kolmogorov smirnov sampling test (see apache commons site
+	// for source)
+	final val EPSILON_T: (Double, Double) = (EPSILON_CDF, EPSILON_SMP)
 
 	//Simple identifier to keep track of which test is running
 	var TEST_ID: (Int, Char) = (0, 'a')
@@ -55,12 +58,12 @@ object TestTools  extends ShouldMatchers with MatchersImplicits {
 
 		// Sample from the t-digest sketch of this distribution
 		val tdSamples: Array[Double] = typeOf[T].toString contains "Int" match { // Int or IntZ
-			case true => Array.fill(SAMPLE_SIZE) {tdgst.samplePMF} // discrete dist
-			case false => Array.fill(SAMPLE_SIZE) {tdgst.samplePDF} // real continuous dist
+			case true => Array.fill(SAMPLE_SIZE_LARGE) {tdgst.samplePMF} // discrete dist
+			case false => Array.fill(SAMPLE_SIZE_LARGE) {tdgst.samplePDF} // real continuous dist
 		}
 
 		// Sample from the dist itself
-		val distSamples: Seq[T] = dist.sample(SAMPLE_SIZE)
+		val distSamples: Seq[T] = dist.sample(SAMPLE_SIZE_LARGE)
 		val evNum: Numeric[T] = implicitly[Numeric[T]]
 		val distSamplesDouble: Array[Double] = distSamples.map(s => evNum.toDouble(s)).toArray
 
