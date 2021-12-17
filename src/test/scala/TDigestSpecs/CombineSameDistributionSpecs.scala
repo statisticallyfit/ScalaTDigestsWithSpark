@@ -7,8 +7,9 @@ import TDigestSpecs.TestTools.kolmogorovSmirnovCdfD
 import org.isarnproject.sketches.TDigest
 //import org.isarnproject.sketches.java.TDigest
 
-
+import org.specs2.matcher.{Matcher, MatchersImplicits, Expectable, ShouldMatchers}
 import org.specs2.mutable._
+
 import util.GeneralUtil
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances.AllInstances._
@@ -43,7 +44,7 @@ object TestData {
 
 import TestData._
 
-object TestTools {
+object TestTools  extends ShouldMatchers with MatchersImplicits {
 
 	// Does the test by samples generated from the digest and other distribution
 	// NOTE: same as isarn-sketches `testSamplingPDF` and `testSamplingPMF` = https://github.com/isarn/isarn-sketches/blob/develop/src/test/scala/org/isarnproject/sketches/TDigestTest.scala#L51-L70
@@ -134,6 +135,22 @@ object TestTools {
 	}
 
 
+
+	//def beLessThanTuple[T: Numeric](right: (T, T)): Matcher[(T,T)] = be_<=(right._1) and be_<=(right._2)
+	//def beBetween(i: Int, j: Int) = be_>=(i) and be_<=(j)
+	//def beShort1: AnyRef with Matcher[Any] = be_<=(5) ^^ { (t: Any) => t.toString.size }
+
+	// NOTE code sources
+	// https://stackoverflow.com/questions/36433390/negating-a-custom-matcher-in-specs2
+	// https://gist.github.com/betandr/e5021bae3ac133e33b5ec6e1df30f782
+	def beLessThanTuple(right: (Double, Double)) = new Matcher[(Double, Double)] {
+		def apply[S <: (Double, Double)](leftInExpectable: Expectable[S]) = {
+			val left: S = leftInExpectable.value
+
+			result((left._1 <= right._1) && (left._2 <= right._2), "pass", "fail", leftInExpectable)
+		}
+	}
+
 }
 import TestTools._
 
@@ -152,9 +169,9 @@ class TSketchCombineSpecs extends Specification {
 
 			val tdCombine = TDigest.combine(td1, td2)
 
-			//kolmogorovSmirnovSampleD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
-			//kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON)
-			kolmogorovSmirnovD(tdCombine, GammaDist(2, 8)) should beLessThan(EPSILON_T)
+			//kolmogorovSmirnovSampleD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
+			//kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
+			kolmogorovSmirnovD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON_T)
 		}
 
 		"---> combine multiple sketches" in {
@@ -187,12 +204,12 @@ class TSketchCombineSpecs extends Specification {
 				.map((td: TDigest) => kolmogorovSmirnovD(td, gammaDist))
 
 			println(s"ksds cumul = $ksdsCumulative")
-			//KSD(tdCombine, GammaDist(2, 8)) should beLessThan(EPS)
+			//KSD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPS)
 			// First ones won't be below epsilon maybe .. check just the last 5? Where do they start to go below
 			// the EPSILON?  Then graph???
 			ksdsCumulative
 				.drop(NUM_MONOIDAL_ADDITIONS - 5)
-				.map(ksd => ksd should beLessThan(EPSILON_T))
+				.map(ksd => ksd should beLessThanTuple(EPSILON_T))
 
 		}
 
@@ -211,10 +228,10 @@ class TSketchCombineSpecs extends Specification {
 			val td1 = TDigest.sketch(poissonData, maxDiscrete = MAX_DISCRETE)
 			val td2 = TDigest.sketch(poissonData, maxDiscrete = MAX_DISCRETE)
 
-			// NOTE: so skewed that we need to tweak the amx discrete parameter to get convergence for KSD
+			// NOTE: so skewed that we need to tweak the max discrete parameter to get convergence for KSD
 			val tdCombine = TDigest.combine(td1, td2, maxDiscrete = MAX_DISCRETE)
 
-			kolmogorovSmirnovD(tdCombine, PoissonDist(2)) should beLessThan(EPSILON_T)
+			kolmogorovSmirnovD(tdCombine, PoissonDist(2)) should beLessThanTuple(EPSILON_T)
 		}
 
 		"---> combine multiple sketches" in {
@@ -240,13 +257,16 @@ class TSketchCombineSpecs extends Specification {
 				.map((td: TDigest) => kolmogorovSmirnovD(td, poissonDist))
 
 			println(s"ksdsCumulative = $ksdsCumulative")
-			//KSD(tdCombine, GammaDist(2, 8)) should beLessThan(EPS)
+			//KSD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPS)
 			// First ones won't be below epsilon maybe .. check just the last 5? Where do they start to go below
 			// the EPSILON?  Then graph???
 			ksdsCumulative
 				.drop(NUM_MONOIDAL_ADDITIONS - 5)
-				.map(ksd => ksd should beLessThan(EPSILON_T)) // checking the last few are converging to below the
+				.map(ksd => ksd should beLessThanTuple(EPSILON_T)) // checking the last few are converging to below
+			// the
 			// EPSILON
+
+			(0.0001, 0.05) should beLessThanTuple((0.02, 0.02))
 
 		}
 
