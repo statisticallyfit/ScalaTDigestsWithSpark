@@ -17,22 +17,18 @@ import org.isarnproject.collections.mixmaps.ordered.tree.DataMap
 import org.isarnproject.sketches.tdmap.tree.INodeTD
 import org.isarnproject.sketches.TDigest
 
-
 import scala.util.Random
 import com.cibo.evilplot._
 import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.renderers.BoxRenderer
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import com.cibo.evilplot.colors.HTMLNamedColors.{dodgerBlue, fireBrick, red}
+import util.GeneralUtil
 
 
 //import org.apache.commons.math3.distribution._
-import util.distributionExtensions.distributions._
-import util.distributionExtensions.instances.AllInstances._
-import util.distributionExtensions.syntax._
 
 import scala.reflect.runtime.universe._
-import util.GeneralUtil
 /**
  * Factory functions for generating Algebird objects based on TDigest
  */

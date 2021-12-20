@@ -1,8 +1,8 @@
 package util.distributionExtensions
 
-import util.distributionExtensions.distributions._
-import util.distributionExtensions.instances.AllInstances._
-import util.distributionExtensions.syntax._
+import distributions._
+import instances.AllInstances._
+import syntax._
 
 /**
  *

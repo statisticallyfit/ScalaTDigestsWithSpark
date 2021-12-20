@@ -1,8 +1,6 @@
 package Project_IsarnSketches
 
-import util.distributionExtensions.distributions._
-import util.distributionExtensions.instances.AllInstances._
-import util.distributionExtensions.syntax._
+import util.GeneralUtil
 
 /**
  * TODO: genate values from 0 -> infinity (cdf fro this range) and compare to cdf of values from 0 -> 1 (cdfinversed)
@@ -20,7 +18,6 @@ import util.distributionExtensions.syntax._
  */
 import scala.reflect.runtime.universe._
 import scala.math.Numeric.Implicits._
-import util.GeneralUtil
 
 object temp_KolmogorovTryout {
 

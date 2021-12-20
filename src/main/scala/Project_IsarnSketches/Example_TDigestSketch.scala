@@ -8,7 +8,6 @@ package Project_IsarnSketches
 //import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import org.apache.commons.math3.distribution.GammaDistribution
 import org.isarnproject.sketches.TDigest
-
 import util.GraphCDFSpline
 
 

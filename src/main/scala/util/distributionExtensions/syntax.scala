@@ -1,7 +1,6 @@
 package util.distributionExtensions
 
-
-import util.distributionExtensions.distributions._
+import distributions._
 
 /**
  *
