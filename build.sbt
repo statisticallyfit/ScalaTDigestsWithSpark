@@ -50,9 +50,11 @@ libraryDependencies ++= Seq(
 	"org.scalanlp" %% "breeze" % "2.0",
 	// -- Probability Monad
 	"org.jliszka" %% "probability-monad" % "1.0.4",
+	// -- Smile (for distribution fitting to sample data)
+	"com.github.haifengl" % "smile-math" % "2.6.0",
 
 
-	// Plotting libraries:
+// Plotting libraries:
 	// -- Breeze-viz
 	"org.scalanlp" %% "breeze-viz" % "2.0",
 	// -- Plotly

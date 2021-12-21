@@ -23,7 +23,12 @@ import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.renderers.BoxRenderer
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import com.cibo.evilplot.colors.HTMLNamedColors.{dodgerBlue, fireBrick, red}
+
+
 import util.GeneralUtil
+import util.distributionExtensions.distributions._
+import util.distributionExtensions.instances.AllInstances._
+import util.distributionExtensions.syntax._
 
 
 //import org.apache.commons.math3.distribution._

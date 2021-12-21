@@ -27,8 +27,11 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 		"---> combine once" in {
 			//TEST_ID = (1, 'a')
 
-			val gammaData1: Seq[Double] = GammaDist(20, 3).sample(SAMPLE_SIZE)
-			val gammaData2: Seq[Double] = GammaDist(50, 3).sample(SAMPLE_SIZE)
+			val (a1, a2) = (20, 50) // the shift, defined (from 20 -> 50, dist moves right)
+			val b = 3
+
+			val gammaData1: Seq[Double] = GammaDist(a1, b).sample(SAMPLE_SIZE)
+			val gammaData2: Seq[Double] = GammaDist(a2, b).sample(SAMPLE_SIZE)
 			//List.fill[Double](SAMPLE_SIZE){ GammaDist(2,8).sample }
 
 			val td1 = TDigest.sketch(gammaData1, maxDiscrete = MAX_DISCRETE)
@@ -38,11 +41,21 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 			//kolmogorovSmirnovSampleD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
 			//kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
-			//TODO left off here
-			kolmogorovSmirnovD(gammaMoveRight, GammaDist(2, 8)) should beLessThanTuple(EPSILON_T)
+
+			val gammaConceptDriftData = Array.fill[Double](SAMPLE_SIZE){gammaMoveRight.samplePDF}
+
+			import smile.stat.distribution.GammaDistribution
+			val est = GammaDistribution.fit(gammaConceptDriftData)
+			val (alphaShape, betaScale) = (est.k, est.theta)
+
+
+			/*kolmogorovSmirnovD(gammaMoveRight, GammaDist(2, 8)) should beLessThanTuple(EPSILON_T)*/
+			//assert(alphaShape > a1 && alphaShape < a2)
+			
+			alphaShape should beBetween(a1, a2)
 		}
 
-		"---> combine multiple sketches" in {
+		/*"---> combine multiple sketches" in {
 			//TEST_ID = (1, 'b')
 
 			val gammaDist: GammaDist = GammaDist(3, 9)
@@ -79,11 +92,11 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 				.drop(NUM_MONOIDAL_ADDITIONS - 5)
 				.map(ksd => ksd should beLessThanTuple(EPSILON_T))
 
-		}
+		}*/
 
 	}
 
-	" (Discrete: Poisson) TDigest can combine sketches to yield the same distribution" should {
+	/*" (Discrete: Poisson) TDigest can combine sketches to yield the same distribution" should {
 
 		"---> combine once" in {
 			//TEST_ID = (1, 'a')
@@ -137,5 +150,5 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 		}
 
-	}
+	}*/
 }

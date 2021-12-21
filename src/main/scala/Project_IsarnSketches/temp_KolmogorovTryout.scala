@@ -1,6 +1,9 @@
 package Project_IsarnSketches
 
 import util.GeneralUtil
+import util.distributionExtensions.distributions._
+import util.distributionExtensions.instances.AllInstances._
+import util.distributionExtensions.syntax._
 
 /**
  * TODO: genate values from 0 -> infinity (cdf fro this range) and compare to cdf of values from 0 -> 1 (cdfinversed)
