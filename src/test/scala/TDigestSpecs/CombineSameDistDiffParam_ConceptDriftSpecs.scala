@@ -27,8 +27,8 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 		"---> combine once" in {
 			//TEST_ID = (1, 'a')
 
-			val (a1, a2) = (20, 50) // the shift, defined (from 20 -> 50, dist moves right)
-			val b = 3
+			val (a1, a2) = (20.0, 150.0) // the shift, defined (from 20 -> 50, dist moves right)
+			val b = 3.0
 
 			val gammaData1: Seq[Double] = GammaDist(a1, b).sample(SAMPLE_SIZE)
 			val gammaData2: Seq[Double] = GammaDist(a2, b).sample(SAMPLE_SIZE)
@@ -37,6 +37,8 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 			val td1 = TDigest.sketch(gammaData1, maxDiscrete = MAX_DISCRETE)
 			val td2 = TDigest.sketch(gammaData2, maxDiscrete = MAX_DISCRETE)
 
+			// TODO find out the math rule -- supposed to be a monoid of gamma? How to test the parameter change?
+			//  Is it really supposed to move right and by how much?
 			val gammaMoveRight = TDigest.combine(td1, td2)
 
 			//kolmogorovSmirnovSampleD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
@@ -47,11 +49,13 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 			import smile.stat.distribution.GammaDistribution
 			val est = GammaDistribution.fit(gammaConceptDriftData)
 			val (alphaShape, betaScale) = (est.k, est.theta)
+			// TODO shape seems confused with scale param here (from smile or from tdigest estimate?)
+			println(alphaShape, betaScale)
 
 
 			/*kolmogorovSmirnovD(gammaMoveRight, GammaDist(2, 8)) should beLessThanTuple(EPSILON_T)*/
 			//assert(alphaShape > a1 && alphaShape < a2)
-			
+
 			alphaShape should beBetween(a1, a2)
 		}
 
