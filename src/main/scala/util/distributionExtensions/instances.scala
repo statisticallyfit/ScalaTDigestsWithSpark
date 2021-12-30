@@ -189,6 +189,42 @@ object instances {
 		}
 	}
 
+	trait BetaInstances {
+		implicit def betaDistHasCDF: CDF[Real, Dist[Real, BetaDist]] = new CDF[Real, Dist[Real, BetaDist]] {
+
+			def cumProb(d: Dist[Real, BetaDist], x: Real): Double = {
+				d.getDist.cumulativeProbability(x.doubleValue())
+			}
+			def invCumProb(d: Dist[Real, BetaDist], p: Double): Real = {
+				d.getDist.inverseCumulativeProbability(p)
+			}
+		}
+		implicit def betaDistCanBeSampled: Sampling[Real, Dist[Real, BetaDist]] =
+			new Sampling[Real, Dist[Real, BetaDist]]{
+
+				def sampleDist(d: Dist[Real, BetaDist], n: Int): Seq[Real] =
+					d.getDist.sample(n).map(BigDecimal(_))
+			}
+	}
+
+	trait WeibullInstances {
+		implicit def weibullDistHasCDF: CDF[Real, Dist[Real, WeibullDist]] = new CDF[Real, Dist[Real, WeibullDist]] {
+
+			def cumProb(d: Dist[Real, WeibullDist], x: Real): Double = {
+				d.getDist.cumulativeProbability(x.doubleValue())
+			}
+			def invCumProb(d: Dist[Real, WeibullDist], p: Double): Real = {
+				d.getDist.inverseCumulativeProbability(p)
+			}
+		}
+		implicit def weibullDistCanBeSampled: Sampling[Real, Dist[Real, WeibullDist]] =
+			new Sampling[Real, Dist[Real, WeibullDist]]{
+
+				def sampleDist(d: Dist[Real, WeibullDist], n: Int): Seq[Real] =
+					d.getDist.sample(n).map(BigDecimal(_))
+			}
+	}
+
 
 	trait DiscreteCDFInstances extends PoissonInstances
 		with GeometricInstances

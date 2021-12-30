@@ -12,6 +12,7 @@ object TestData {
 
 	// Number of times to combine the t-digests
 	final val NUM_MONOIDAL_ADDITIONS = 20
+	final val NUM_MONOIDAL_ADDITIONS_LARGE: Int = 180
 
 	// Kolmogorov Smirnov epsilon limit bound
 	final val EPSILON_CDF: Double = 0.02 // value copied from isarn-sketches-spark tests

@@ -6,7 +6,9 @@ package util.distributionExtensions
 
 
 
-import org.apache.commons.math3.distribution.{BinomialDistribution, ExponentialDistribution, GammaDistribution, GeometricDistribution, GumbelDistribution, NormalDistribution, PoissonDistribution, UniformRealDistribution}
+import org.apache.commons.math3.distribution.{BetaDistribution, BinomialDistribution, ExponentialDistribution,
+	WeibullDistribution, GammaDistribution, GeometricDistribution, GumbelDistribution, NormalDistribution,
+	PoissonDistribution, UniformRealDistribution}
 
 
 /**
@@ -51,6 +53,9 @@ object distributions {
 		with ContinuousDist[GumbelDist] { def getDist: GumbelDist = this }
 	case class ExponentialDist(mean: Double) extends ExponentialDistribution(mean)
 		with ContinuousDist[ExponentialDist] { def getDist: ExponentialDist = this }
-
+	case class BetaDist(alphaShape: Double, betaShape: Double) extends BetaDistribution(alphaShape, betaShape)
+		with ContinuousDist[BetaDist] {def getDist: BetaDist = this }
+	case class WeibullDist(alphaShape: Double, betaShape: Double) extends WeibullDistribution(alphaShape, betaShape)
+		with ContinuousDist[WeibullDistribution] {def getDist: WeibullDistribution = this }
 
 }
