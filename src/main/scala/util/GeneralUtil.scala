@@ -47,6 +47,13 @@ object GeneralUtil {
 	// NOTE: source here https://stackoverflow.com/a/27213057 for generateTSeq
 	// Could have done @specialized
 
+	def numToT[T: TypeTag](num: Double)(implicit evNum: Numeric[T]): T = {
+		typeOf[T].toString.split('.').last match {
+			case "IntZ" => BigInt(num.toInt).asInstanceOf[T]
+			case "Real" => BigDecimal.valueOf(num).asInstanceOf[T]
+		}
+	}
+
 	def generateTSeqFromDouble[T: TypeTag](xmin: Double, xmax: Double, N: Int = 1000)(implicit evNum: Numeric[T])
 	: Seq[T]	= {
 		typeOf[T].toString.split('.').last match {

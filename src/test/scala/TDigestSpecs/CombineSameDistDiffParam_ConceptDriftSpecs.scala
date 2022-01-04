@@ -12,7 +12,8 @@ import util.distributionExtensions.syntax._
 import scala.reflect.runtime.universe._
 
 import utilTest.TestData._
-import utilTest.TestTools._
+import utilTest.TestTools.StatTools._
+import utilTest.TestTools.SpecsTools._
 
 /**
  * Idea of concept drift = https://github.com/xxxnell/flip#the-case-of-concept-drift
@@ -59,6 +60,8 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 			alphaShape should beBetween(a1, a2)
 		}
 
+		// combine multiple sketches (case 1) where adding same gamma to original one. (different params)
+
 		/*"---> combine multiple sketches" in {
 			//TEST_ID = (1, 'b')
 
@@ -97,6 +100,9 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 				.map(ksd => ksd should beLessThanTuple(EPSILON_T))
 
 		}*/
+
+		// combine multiple sketches (case 2) where adding a moving gamma to the original one (adding constantly
+		// changing parameter): Gamma(1) + Gamma(2) + Gamma (3) ... and then test how it moves to the right
 
 	}
 

@@ -12,7 +12,8 @@ import util.distributionExtensions.syntax._
 import scala.reflect.runtime.universe._
 
 import utilTest.TestData._
-import utilTest.TestTools._
+import utilTest.TestTools.StatTools._
+import utilTest.TestTools.SpecsTools._
 
 /**
  *
