@@ -15,6 +15,9 @@ import utilTest.TestData._
 import utilTest.TestTools.StatTools._
 import utilTest.TestTools.SpecsTools._
 
+
+import smile.stat.distribution.GammaDistribution
+
 /**
  * Idea of concept drift = https://github.com/xxxnell/flip#the-case-of-concept-drift
  */
@@ -25,81 +28,81 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 	" (Continuous: Gamma) TDigest can combine sketches of distributions with different parameters" should {
 
-		"---> combine once" in {
-			//TEST_ID = (1, 'a')
+		"---> combine once, by combining two same distributions with different parameters, and seeing how the " +
+			"result lands in the middle" in {
+			val (a1, b1) = (2.5, 10.0)
+			val (a2, b2) = (4.5, 2.1)
 
-			val (a1, a2) = (20.0, 150.0) // the shift, defined (from 20 -> 50, dist moves right)
-			val b = 3.0
+			val distRightSkewStart = GammaDist(a1, b1)
+			val distLeftSkewShift = GammaDist(a2, b2)
 
-			val gammaData1: Seq[Double] = GammaDist(a1, b).sample(SAMPLE_SIZE)
-			val gammaData2: Seq[Double] = GammaDist(a2, b).sample(SAMPLE_SIZE)
-			//List.fill[Double](SAMPLE_SIZE){ GammaDist(2,8).sample }
+			val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE)
 
-			val td1 = TDigest.sketch(gammaData1, maxDiscrete = MAX_DISCRETE)
-			val td2 = TDigest.sketch(gammaData2, maxDiscrete = MAX_DISCRETE)
+			val shiftDataOnce: Array[Double] = distLeftSkewShift.sample(SAMPLE_SIZE)
 
-			// TODO find out the math rule -- supposed to be a monoid of gamma? How to test the parameter change?
-			//  Is it really supposed to move right and by how much?
-			val gammaMoveRight = TDigest.combine(td1, td2)
+			val td1 = TDigest.sketch(startingData)
+			val td2 = TDigest.sketch(shiftDataOnce)
 
-			//kolmogorovSmirnovSampleD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
-			//kolmogorovSmirnovCdfD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPSILON)
+			val combineOnce = TDigest.combine(td1, td2)
+			val combineOnceData = Array.fill[Double](SAMPLE_SIZE){combineOnce.samplePDF}
 
-			val gammaConceptDriftData = Array.fill[Double](SAMPLE_SIZE){gammaMoveRight.samplePDF}
-
-			import smile.stat.distribution.GammaDistribution
-			val est = GammaDistribution.fit(gammaConceptDriftData)
-			val (alphaShape, betaScale) = (est.k, est.theta)
-			// TODO shape seems confused with scale param here (from smile or from tdigest estimate?)
-			println(alphaShape, betaScale)
+			val fit: GammaDistribution = GammaDistribution.fit(combineOnceData)
+			val distCombineOnce: GammaDist = GammaDist(fit.k, fit.theta)
 
 
-			/*kolmogorovSmirnovD(gammaMoveRight, GammaDist(2, 8)) should beLessThanTuple(EPSILON_T)*/
-			//assert(alphaShape > a1 && alphaShape < a2)
+			// Mean of the shifted dist should be between the other two dists from which it was combined
+			distCombineOnce.getNumericalMean should beBetween(distLeftSkewShift.getNumericalMean,
+				distRightSkewStart.getNumericalMean)
 
-			alphaShape should beBetween(a1, a2)
+			// right-skew dist should be on the left of the combined dist (between the right and left-skewed dists)
+			cdfSignTest(distRightSkewStart, distCombineOnce) should beLessThan(0.0)
+			// combined dist should be on the right of the left-tailed dist (between the right and left-skewed dists)
+			cdfSignTest(distCombineOnce, distLeftSkewShift) should beLessThan(0.0)
 		}
 
 		// combine multiple sketches (case 1) where adding same gamma to original one. (different params)
 
-		/*"---> combine multiple sketches" in {
-			//TEST_ID = (1, 'b')
+		"---> combine multiple sketches, by adding many of the same distribution to one different distribution, and" +
+			" see how the result gets shifted by the multiple combinations" in {
+			val (a1, b1) = (2.5, 10.0)
+			val (a2, b2) = (4.5, 2.1)
 
-			val gammaDist: GammaDist = GammaDist(3, 9)
+			val distRightSkewStart = GammaDist(a1, b1)
+			val distLeftSkewShift = GammaDist(a2, b2)
 
-			val data: Seq[Seq[Double]] = Seq.fill[Seq[Double]](1 + NUM_MONOIDAL_ADDITIONS)(
-				gammaDist.sample(SAMPLE_SIZE)
+			val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE)
+
+			val shiftData: Seq[Seq[Double]] = Seq.fill[Seq[Double]](1 + NUM_MONOIDAL_ADDITIONS)(
+				distLeftSkewShift.sample(SAMPLE_SIZE)
 			)
 
 			// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.
 			//  Means; sum first 2, sum first 3, sum first 4, sum first 5, ... and keep track, all the way up to
 			//  NUM_MONOIDAL_ADDITIONS.
-			val manyTDSketches: Seq[TDigest] = data
+			val startSketch: TDigest = TDigest.sketch(startingData, maxDiscrete = MAX_DISCRETE)
+
+			// Adding the other-kind gamma to the single
+			val shiftedSketch: Seq[TDigest] = shiftData
 				.map((distSmp: Seq[Double]) => TDigest.sketch(distSmp, maxDiscrete = MAX_DISCRETE))
-				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
+				.scanLeft(startSketch)((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
 				.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
-			// Computing the KSD statistic
-			/*val ksdsCdfCumul: Seq[Double] = manyTDSketches
-				.map((td: TDigest) => kolmogorovSmirnovCdfD(td, gammaDist))
-			val ksdsSampleCumul: Seq[Double] = manyTDSketches
-				.map((td: TDigest) => kolmogorovSmirnovSampleD(td, gammaDist))
 
-			println(s"ksds (cdf) = $ksdsCdfCumul")
-			println(s"ksds (sample) = $ksdsSampleCumul")*/
+			// see how convergence is at the last combination
+			val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
 
-			val ksdsCumulative: Seq[(Double, Double)] = manyTDSketches
-				.map((td: TDigest) => kolmogorovSmirnovD(td, gammaDist))
 
-			println(s"ksds cumul = $ksdsCumulative")
-			//KSD(tdCombine, GammaDist(2, 8)) should beLessThanTuple(EPS)
-			// First ones won't be below epsilon maybe .. check just the last 5? Where do they start to go below
-			// the EPSILON?  Then graph???
-			ksdsCumulative
-				.drop(NUM_MONOIDAL_ADDITIONS - 5)
-				.map(ksd => ksd should beLessThanTuple(EPSILON_T))
+			val fit = GammaDistribution.fit(conceptDriftData)
+			val distShifted = GammaDist(fit.k, fit.theta)
 
-		}*/
+			distShifted.getNumericalMean should beBetween(distLeftSkewShift.getNumericalMean, distRightSkewStart.getNumericalMean)
+
+			// right-skew dist should be on the left of the combined dist (between the right and left-skewed dists)
+			cdfSignTest(distRightSkewStart, distShifted) should beLessThan(0.0)
+			// combined dist should be on the right of the left-tailed dist (between the right and left-skewed dists)
+			cdfSignTest(distShifted, distLeftSkewShift) should beLessThan(0.0)
+
+		}
 
 		// combine multiple sketches (case 2) where adding a moving gamma to the original one (adding constantly
 		// changing parameter): Gamma(1) + Gamma(2) + Gamma (3) ... and then test how it moves to the right

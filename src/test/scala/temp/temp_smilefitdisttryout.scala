@@ -11,6 +11,8 @@ import scala.reflect.runtime.universe._
 import utilTest.TestData._
 import utilTest.TestTools.StatTools._
 import utilTest.TestTools.SpecsTools._
+
+import smile.stat.distribution.GammaDistribution
 /**
  *
  */
@@ -30,6 +32,18 @@ object temp_smilefitdisttryout extends App {
 		distLeftSkewShift.sample(SAMPLE_SIZE)
 	)
 
+	/*val shiftDataOnce = distLeftSkewShift.sample(SAMPLE_SIZE)
+	val td1 = TDigest.sketch(startingData)
+	val td2 = TDigest.sketch(shiftDataOnce)
+	val comb = TDigest.combine(td1, td2)
+	val combData = Array.fill[Double](SAMPLE_SIZE){comb.samplePDF}
+	val fit = GammaDistribution.fit(combData)
+	val myfitgamma = GammaDist(fit.k, fit.theta)
+	println(s"means combine once: ${distLeftSkewShift.getNumericalMean} <? ${fit.mean()} <? " +
+		s"${distRightSkewStart.getNumericalMean}")
+	println(s"cdf sign tests combine once: ${cdfSignTest(distRightSkewStart, myfitgamma)} <? 0" +
+		s"and ${cdfSignTest(myfitgamma, distLeftSkewShift)} <? 0")*/
+
 
 	// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.
 	//  Means; sum first 2, sum first 3, sum first 4, sum first 5, ... and keep track, all the way up to
@@ -47,7 +61,7 @@ object temp_smilefitdisttryout extends App {
 	// see how convergence is at the last combination
 	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
 
-	import smile.stat.distribution.GammaDistribution
+
 	val distShifted = GammaDistribution.fit(conceptDriftData)
 	val (alphaShape, betaScale) = (distShifted.k, distShifted.theta)
 
