@@ -179,16 +179,17 @@ object TestTools  {
 			// Calculates the KSD statistic number here:
 			val signCdfDiffs: Seq[Double] = xvals
 				//.iterator
-				.map(x => (if(xmin1 < xmin2) {
-						if((xmin1_T <= x) && (x < xmin2_T)) -dist1.cdf(x)
+				.map(x => dist1.cdf(x) - dist2.cdf(x) /*(if(xmin1 < xmin2) {
+						if((xmin1_T <= x) && (x < xmin2_T)) dist1.cdf(x)
 						else (dist1.cdf(x) - dist2.cdf(x)) // xmin2_T < x
-					} else if(xmin1 == xmin2) {
-						if(xmin1_T == x) (dist1.cdf(x) - dist2.cdf(x))
-						else if(x > xmin1_T) (dist1.cdf(x) - dist2.cdf(x))
-					} else {// xmin1 > xmin2
-						if((xmin2_T <= x) && (x < xmin1_T)) -dist2.cdf(x)
+					} else if(xmin1 > xmin2) {
+						if((xmin2_T <= x) && (x < xmin1_T)) dist2.cdf(x)
 						else (dist2.cdf(x) - dist1.cdf(x)) // xmin1_T < x
-					}).asInstanceOf[Double]
+					} else {// xmin1 == xmin2
+						dist1.cdf(x) - dist2.cdf(x)
+						/*if(xmin1_T == x) (dist1.cdf(x) - dist2.cdf(x))
+						else if(x > xmin1_T) (dist1.cdf(x) - dist2.cdf(x))*/
+					}).asInstanceOf[Double]*/
 				) //math.abs(tdCdf(x) - dist.cdf(x)))
 
 			val signKSD: Double = signCdfDiffs.sum
