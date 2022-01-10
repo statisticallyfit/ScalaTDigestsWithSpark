@@ -38,6 +38,30 @@ object TestTools  {
 
 	}
 
+	object GeneralTools {
+		final val NUM_REPEAT = 6
+
+
+		def repeatTail[T: Numeric](list: Seq[T], numReps: Int = NUM_REPEAT): Seq[T] = {
+
+			// step 1: take the last NUM_REPEAT from end of list
+			val elemsToRepeat = list.drop(list.length - numReps)
+
+			// step 2: repeat each one like a cone
+			val reps = 1 to numReps
+			val repeatedEnds: Seq[T] = elemsToRepeat.zip(reps).map(ar => ar match {case (a, r) => List.fill(r)(a)})
+				.flatten
+
+			// step 3: combine into list
+			val elemsFront = list.take(list.length - numReps)
+
+			elemsFront ++ repeatedEnds
+		}
+
+		// Task 1: repeat ends  + combine
+		// Task 2: interweave betas to elonagate further
+	}
+
 
 	object StatTools {
 		// Does the test by samples generated from the digest and other distribution

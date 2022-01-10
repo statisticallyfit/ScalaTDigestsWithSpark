@@ -109,6 +109,21 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 	}
 
+	import utilTest.TestTools.GeneralTools._
+	// TODO left off here how to combine the two resulting lists / pair them?
+	// NOTE RULE GAMMA:
+	// 1) increase ALPHA (shape), decrease BETA (scale) ---> distribution gets flatter + moves right
+	// 2) decrease ALPHA, increase BETA ---> distribution gets narrower, taller + moves left
+	val as = (10 to 200 by 10).toList
+	val bs = ((2 to 10 by 1) ++ (10 to 50 by 10)).reverse
+	val NUM_REPEAT = 6 // last 6 in alphas list (to weave in the small betas)
+	val t0 = repeatTail(as)
+	val t1 = repeatTail(bs)
+	// todo how to check the important pairs at the end make it into the paired list?
+	val asBs = t0.zip(t1)
+	val gammasMovingRight: Seq[GammaDist] = asBs.map(_ match { case (a, b) => GammaDist(a, b)} )
+
+
 	/*" (Discrete: Poisson) TDigest can combine sketches to yield the same distribution" should {
 
 		"---> combine once" in {
