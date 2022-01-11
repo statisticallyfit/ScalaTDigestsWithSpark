@@ -7,70 +7,70 @@ import util.distributionExtensions.instances.AllInstances._
 import util.distributionExtensions.syntax._
 
 import scala.reflect.runtime.universe._
-
 import utilTest.TestData._
 import utilTest.TestTools.StatTools._
 import utilTest.TestTools.SpecsTools._
-
 import smile.stat.distribution.GammaDistribution
+import utilTest.TestTools.GeneralTools.repeatTail
 /**
  *
  */
 object temp_smilefitdisttryout extends App {
 
 
-	//val (a1, a2) = (5.0, 80.0) // the shift, defined (from 20 -> 50, dist moves right)
-	val (a1, b1) = (2.5, 10.0)
-	val (a2, b2) = (4.5, 2.1)
+	val as = (30 to 180 by 10).toList
+	val bs = ((2 to 10 by 1) ++ (10 to 60 by 10)).reverse
+	val NUM_REPEAT = 6 // last 6 in alphas list (to weave in the small betas)
 
-	val distRightSkewStart = GammaDist(a1, b1)
-	val distLeftSkewShift = GammaDist(a2, b2)
+	val alphas = repeatTail(as)
+	val betas = repeatTail(bs)
+	// TODO how to check the important pairs at the end make it into the paired list?
+	val asBs = alphas.zip(betas)
 
-	val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE)
+	val gammasMovingRight: Seq[GammaDist] = asBs.map { case (a, b) => GammaDist(a, b) }
 
-	val shiftData: Seq[Seq[Double]] = Seq.fill[Seq[Double]](1 + NUM_MONOIDAL_ADDITIONS)(
-		distLeftSkewShift.sample(SAMPLE_SIZE)
-	)
+	// NOTE: now here the NUM_MONOIDAL_ADDITIONS is comparable to shiftData.length
+	val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE))
 
-	/*val shiftDataOnce = distLeftSkewShift.sample(SAMPLE_SIZE)
-	val td1 = TDigest.sketch(startingData)
-	val td2 = TDigest.sketch(shiftDataOnce)
-	val comb = TDigest.combine(td1, td2)
-	val combData = Array.fill[Double](SAMPLE_SIZE){comb.samplePDF}
-	val fit = GammaDistribution.fit(combData)
-	val myfitgamma = GammaDist(fit.k, fit.theta)
-	println(s"means combine once: ${distLeftSkewShift.getNumericalMean} <? ${fit.mean()} <? " +
-		s"${distRightSkewStart.getNumericalMean}")
-	println(s"cdf sign tests combine once: ${cdfSignTest(distRightSkewStart, myfitgamma)} <? 0" +
-		s"and ${cdfSignTest(myfitgamma, distLeftSkewShift)} <? 0")*/
-
-
-	// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.
-	//  Means; sum first 2, sum first 3, sum first 4, sum first 5, ... and keep track, all the way up to
-	//  NUM_MONOIDAL_ADDITIONS.
-	val startSketch: TDigest = TDigest.sketch(startingData, maxDiscrete = MAX_DISCRETE)
-
-	// Adding the other-kind gamma to the single
+	// Creating the sketches and combining them:
 	val shiftedSketch: Seq[TDigest] = shiftData
-		.map((distSmp: Seq[Double]) => TDigest.sketch(distSmp, maxDiscrete = MAX_DISCRETE))
-		.scanLeft(startSketch)((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
+		.map((distSmp: Array[Double]) => TDigest.sketch(distSmp, maxDiscrete = MAX_DISCRETE))
+		.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
 		.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
-	//List.fill[Double](SAMPLE_SIZE){ GammaDist(2,8).sample }
 
 	// see how convergence is at the last combination
 	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
 
 
-	val distShifted = GammaDistribution.fit(conceptDriftData)
-	val (alphaShape, betaScale) = (distShifted.k, distShifted.theta)
+	val fit = GammaDistribution.fit(conceptDriftData)
+	val distShifted = GammaDist(fit.k, fit.theta)
+	val distFirst: GammaDist = gammasMovingRight.head
+	val distLast: GammaDist = gammasMovingRight.last
 
-	distShifted.mean() should beBetween(distRightSkewStart.getNumericalMean, distLeftSkewShift.getNumericalMean)
+	/*distShifted.getNumericalMean should beBetween(distFirst.getNumericalMean, distLast
+		.getNumericalMean)
+
+	// right-skew dist should be on the left of the combined dist (between the right and left-skewed dists)
+	cdfSignTest(distFirst, distShifted) should beLessThan(0.0)
+	// combined dist should be on the right of the left-tailed dist (between the right and left-skewed dists)
+	cdfSignTest(distShifted, distLast) should beLessThan(0.0)*/
 
 	// TODO shape seems confused with scale param here (from smile or from tdigest estimate?)
-	println(alphaShape, betaScale)
-	println(s"means: ${distLeftSkewShift.getNumericalMean} <? ${distShifted.mean()} <? " +
-		s"${distRightSkewStart.getNumericalMean}")
-	println(s"cdf sign test = ${cdfSignTest(distRightSkewStart, distLeftSkewShift)}")
-	println(s"cdf sign test = ${cdfSignTest(distLeftSkewShift, distRightSkewStart)}")
+	println(s"alphas, betas: ${(distFirst.getAlpha, distFirst.getBeta)}, " +
+		s"${(distShifted.getAlpha, distShifted.getBeta)}, " +
+		s"${(distLast.getAlpha, distLast.getBeta)}")
+
+	println(s"means: ${distLast.getNumericalMean} <? ${distShifted.getNumericalMean} <? " +
+		s"${distFirst.getNumericalMean}")
+	println(s"cdf sign test = ${cdfSignTest(distFirst, distShifted)}")
+	println(s"cdf sign test = ${cdfSignTest(distShifted, distLast)}")
+
+	val (a1, a2, a3, b1, b2, b3) = (distFirst.shape, distShifted.shape, distLast.shape, distFirst.scale, distShifted
+		.scale, distLast.scale)
+	println(s"modes = ${((a1-1)/b1, (a2-1)/b2, (a3-1)/b3)}")
+	println()
+
+	println(s"sign test of (2,2), (28,28): ${cdfSignTest(GammaDist(2,2), GammaDist(28,28))}")
+	println(s"modes of (2,2), (28, 28): ${((2-1)/2,  (28-1)/28)}")
 }

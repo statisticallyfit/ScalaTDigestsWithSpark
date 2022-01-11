@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
 import utilTest.TestData._
 import utilTest.TestTools.StatTools._
 import utilTest.TestTools.SpecsTools._
-
+import utilTest.TestTools.GeneralTools._
 
 import smile.stat.distribution.GammaDistribution
 
@@ -62,8 +62,8 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 		// combine multiple sketches (case 1) where adding same gamma to original one. (different params)
 
-		"---> combine multiple sketches, by adding many of the same distribution to one different distribution, and" +
-			" see how the result gets shifted by the multiple combinations" in {
+		"---> combine multiple sketches (case 1), by adding many of the same distribution to one different " +
+			"distribution, to see how the result gets shifted by the multiple combinations" in {
 			val (a1, b1) = (2.5, 10.0)
 			val (a2, b2) = (4.5, 2.1)
 
@@ -104,24 +104,71 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 		}
 
-		// combine multiple sketches (case 2) where adding a moving gamma to the original one (adding constantly
-		// changing parameter): Gamma(1) + Gamma(2) + Gamma (3) ... and then test how it moves to the right
+
+		"---> combine multiple sketches (case 2) where adding a bunch of moving gammas (gammas that change " +
+			"parameters) to the original one to see how the result gets shifted by the multiple combinations" in {
+
+			// NOTE RULE GAMMA:
+			// 1) increase ALPHA (shape), decrease BETA (scale) ---> distribution gets flatter + moves right
+			// 2) decrease ALPHA, increase BETA ---> distribution gets narrower, taller + moves left
+
+			/*val as = (30 to 180 by 10).toList
+			val bs = ((2 to 10 by 1) ++ (10 to 60 by 10)).reverse
+			val alphas = repeatTail(as)
+			val betas = repeatTail(bs)
+			// TODO how to check the important pairs at the end make it into the paired list?
+			val asBs = alphas.zip(betas)*/
+
+			val as = (5 to 150).map(_.toDouble).toList
+			val bs = (5 to 150).map(_.toDouble).toList
+			val asBs = for {
+				x <- as
+				y <- bs
+			} yield (x, y)
+			val gammas: Seq[GammaDist] = asBs.map { case (a, b) => GammaDist(a, b) }
+
+			// Calculate the modes to order the gammas by their modes
+			val modes = gammas.map(g => calcMode(g)).filter(_ > 1) //since the distributions with 0 are
+			// too skewed to the left of the x-axis
+			// Sort the dists by the modes, increasingly, so the dists are moving right
+			val gammasMovingRight: Seq[GammaDist] = (modes.zip(gammas).sortBy{ case (mode, gammaDist) => mode })
+				.unzip._2
+			// get just the gamma dists
+
+
+			//TODO left off here
+
+			// NOTE: now here the NUM_MONOIDAL_ADDITIONS is replaced by shiftData.length
+			val shiftData: Seq[Array[Double]] = gammas.map(gdist => gdist.sample(SAMPLE_SIZE))
+
+			// Creating the sketches and combining them:
+			val shiftedSketch: Seq[TDigest] = shiftData
+				.map((distSmp: Array[Double]) => TDigest.sketch(distSmp, maxDiscrete = MAX_DISCRETE))
+				.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
+				.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
+
+
+			// see how convergence is at the last combination
+			val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
+
+
+			val fit = GammaDistribution.fit(conceptDriftData)
+			val distShifted = GammaDist(fit.k, fit.theta)
+			val distFirst: GammaDist = gammas.head
+			val distLast: GammaDist = gammas.last
+
+			distShifted.getNumericalMean should beBetween(distFirst.getNumericalMean, distLast
+				.getNumericalMean)
+
+			// right-skew dist should be on the left of the combined dist (between the right and left-skewed dists)
+			cdfSignTest(distFirst, distShifted) should beLessThan(0.0)
+			// combined dist should be on the right of the left-tailed dist (between the right and left-skewed dists)
+			cdfSignTest(distShifted, distLast) should beLessThan(0.0)
+		}
+
 
 	}
 
-	import utilTest.TestTools.GeneralTools._
-	// TODO left off here how to combine the two resulting lists / pair them?
-	// NOTE RULE GAMMA:
-	// 1) increase ALPHA (shape), decrease BETA (scale) ---> distribution gets flatter + moves right
-	// 2) decrease ALPHA, increase BETA ---> distribution gets narrower, taller + moves left
-	val as = (10 to 200 by 10).toList
-	val bs = ((2 to 10 by 1) ++ (10 to 50 by 10)).reverse
-	val NUM_REPEAT = 6 // last 6 in alphas list (to weave in the small betas)
-	val t0 = repeatTail(as)
-	val t1 = repeatTail(bs)
-	// todo how to check the important pairs at the end make it into the paired list?
-	val asBs = t0.zip(t1)
-	val gammasMovingRight: Seq[GammaDist] = asBs.map(_ match { case (a, b) => GammaDist(a, b)} )
 
 
 	/*" (Discrete: Poisson) TDigest can combine sketches to yield the same distribution" should {

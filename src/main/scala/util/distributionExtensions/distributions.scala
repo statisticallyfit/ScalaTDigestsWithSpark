@@ -55,7 +55,7 @@ object distributions {
 		with ContinuousDist[ExponentialDist] { def getDist: ExponentialDist = this }
 	case class BetaDist(alphaShape: Double, betaShape: Double) extends BetaDistribution(alphaShape, betaShape)
 		with ContinuousDist[BetaDist] {def getDist: BetaDist = this }
-	case class WeibullDist(alphaShape: Double, betaShape: Double) extends WeibullDistribution(alphaShape, betaShape)
+	case class WeibullDist(alphaShape: Double, betaScale: Double) extends WeibullDistribution(alphaShape, betaScale)
 		with ContinuousDist[WeibullDistribution] {def getDist: WeibullDistribution = this }
 
 }

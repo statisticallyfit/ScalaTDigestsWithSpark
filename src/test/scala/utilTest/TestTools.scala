@@ -39,21 +39,25 @@ object TestTools  {
 	}
 
 	object GeneralTools {
+		// The count of elements to take of the tail of the list
 		final val NUM_REPEAT = 6
 
+		// increase each element by this multiple (1, 2, 4, 8, 16, 32 ...) so for instance if you have elemnts (n1,
+		// n2,n3,n4,n5...), and NUM_INCR = 2, then result is (n1, n2,n2, n3,n3,n3,n3, n4,n4,n4,n4,n4,n4,n4, ...)
+		final val NUM_INCR = 2
 
-		def repeatTail[T: Numeric](list: Seq[T], numReps: Int = NUM_REPEAT): Seq[T] = {
+		def repeatTail[T: Numeric](list: Seq[T], numReps: Int = NUM_REPEAT, numIncr: Int = NUM_INCR): Seq[T] = {
 
 			// step 1: take the last NUM_REPEAT from end of list
-			val elemsToRepeat = list.drop(list.length - numReps)
+			val elemsToRepeat: Seq[T] = list.drop(list.length - numReps)
 
 			// step 2: repeat each one like a cone
-			val reps = 1 to numReps
+			val reps = (1 to numReps).map(_ * numIncr)
 			val repeatedEnds: Seq[T] = elemsToRepeat.zip(reps).map(ar => ar match {case (a, r) => List.fill(r)(a)})
 				.flatten
 
 			// step 3: combine into list
-			val elemsFront = list.take(list.length - numReps)
+			val elemsFront: Seq[T] = list.take(list.length - numReps)
 
 			elemsFront ++ repeatedEnds
 		}
@@ -64,6 +68,31 @@ object TestTools  {
 
 
 	object StatTools {
+
+		def calcMode[T: Numeric, D](dist: Dist[T, D]): Double = {
+			dist.getDist match {
+				case g: GammaDist => (g.shape - 1) / g.scale
+				case g: GumbelDist => (g.mu)
+				case n: NormalDist => n.mu
+				case cu: ContinuousUniformDist => ??? //TODO all x in [a, b] but how to give that?
+				case e: ExponentialDist => 0
+				case w: WeibullDist => {
+					if(w.alphaShape == 1) 0
+					else {
+						val (a, b) = (w.alphaShape, w.betaScale)
+						scala.math.pow(1.0 * b * ((a - 1) / (a * 1.0)),  (1.0 / a))
+					}
+				}
+
+				case p: PoissonDist => scala.math.floor(p.lambda) // TODO and mode is (mu, mu-1) if mu is
+				// positive integer
+				case b: BinomialDist => scala.math.floor((b.numTrials + 1) * b.p)
+				case g: GeometricDist => 1
+
+			}
+		}
+
+
 		// Does the test by samples generated from the digest and other distribution
 		// NOTE: same as isarn-sketches `testSamplingPDF` and `testSamplingPMF` = https://github.com/isarn/isarn-sketches/blob/develop/src/test/scala/org/isarnproject/sketches/TDigestTest.scala#L51-L70
 
