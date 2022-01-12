@@ -64,6 +64,35 @@ object TestTools  {
 
 		// Task 1: repeat ends  + combine
 		// Task 2: interweave betas to elonagate further
+
+
+		/**
+		 * Splits a list like [(g1, 10), (g2, 10), (g3, 10), (g4, 20), (g5, 20), ...] into a list of lists
+		 * separated by the second element in the tuple:
+		 * [[(g1, 10), (g2, 10), (g3, 10)], [(g4, 20), (g5, 20)], [], ...]
+		 * @param lst
+		 * @tparam T - the type of the second element in the tuple, the one by which the tuples are grouped into
+		 *           lists.
+		 * @tparam D - the type of the first element in the tuple
+		 * @return
+		 */
+		def splitGroups[T: Numeric, D](lst: Seq[(D, T)]): Seq[Seq[(D, T)]] = {
+			def splitter(acc: Seq[Seq[(D, T)]], processList: Seq[(D, T)]): Seq[Seq[(D, T)]] = {
+				if(processList.isEmpty){
+					return acc
+				} else {
+					if(acc.isEmpty){
+						splitter(List(List(processList.head)), processList.tail)
+					}
+					else if(processList.head._2 == acc.last.head._2){ // , tag onto end off last one in accumulator
+						splitter(acc.init :+ (acc.last :+ processList.head), processList.tail)
+					} else { // else the split happens here [n2, n2, ...] vs. [[n1,n1], ...]
+						splitter(acc :+ List(processList.head), processList.tail)
+					}
+				}
+			}
+			splitter(List(), lst)
+		}
 	}
 
 

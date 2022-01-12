@@ -131,15 +131,14 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 			val modes = gammas.map(g => calcMode(g)).filter(_ > 1) //since the distributions with 0 are
 			// too skewed to the left of the x-axis
 			// Sort the dists by the modes, increasingly, so the dists are moving right
-			val gammasMovingRight: Seq[GammaDist] = (modes.zip(gammas).sortBy{ case (mode, gammaDist) => mode })
-				.unzip._2
-			// get just the gamma dists
+			val gammasMovingRight: Seq[GammaDist] = modes.zip(gammas)
+				.sortBy{ case (mode, gammaDist) => mode }
+				.unzip._2 // get just the gamma dists
 
 
-			//TODO left off here
 
 			// NOTE: now here the NUM_MONOIDAL_ADDITIONS is replaced by shiftData.length
-			val shiftData: Seq[Array[Double]] = gammas.map(gdist => gdist.sample(SAMPLE_SIZE))
+			val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE))
 
 			// Creating the sketches and combining them:
 			val shiftedSketch: Seq[TDigest] = shiftData
@@ -159,6 +158,8 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 			distShifted.getNumericalMean should beBetween(distFirst.getNumericalMean, distLast
 				.getNumericalMean)
+
+			calcMode(distShifted) should beBetween(calcMode(distFirst), calcMode(distLast))
 
 			// right-skew dist should be on the left of the combined dist (between the right and left-skewed dists)
 			cdfSignTest(distFirst, distShifted) should beLessThan(0.0)
