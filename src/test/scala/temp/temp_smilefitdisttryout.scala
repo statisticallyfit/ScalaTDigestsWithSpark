@@ -41,10 +41,26 @@ object temp_smilefitdisttryout extends App {
 	val groups: Map[Double, Seq[(Double, GammaDist)]] = gammasModes.groupBy(_._1) // group by same modes
 	println(s"groups = $groups")
 	// Sort by mode (increasing):
-	val gammasGroupsSorted: Seq[Seq[(Double, GammaDist)]] = groups.toSeq.sortBy(_._1).unzip._2 // get just
+	val groupsSorted: Seq[Seq[(Double, GammaDist)]] = groups.toSeq.sortBy(_._1).unzip._2 // get just
 	// mode-gammas
-	println(s" sorted GROUPED modes = $gammasGroupsSorted")
-	// 2) Create list of increasing numbers to weight the list by (to choose num of gammas according to the nums in
+	println(s" sorted GROUPED modes = $groupsSorted")
+
+	// TODO: new steps
+	// 2) pick head of each sorted groups (the smaller alpha-beta pair, the flatter the distribution, otherwise gets
+	// too narrow)
+	val firstsGroupsSorted: Seq[(Double, GammaDist)] = groupsSorted.map(_.head)
+	// 3) get the last 1/4 of the list. Repeat the gammas like 1, 2, 4, 8,.. (geometric by 2)) (use repeatTail
+	// function)
+	val conedGroups: Seq[(Double, GammaDist)] = repeatTail(firstsGroupsSorted, numReps = 10, numIncr = 3) //
+	// take last
+	// 10, repeat as 1, 3, 9, 27, 81, ...
+	val gammasMovingRight: Seq[GammaDist] = conedGroups.unzip._2
+
+	println(s"coned groups = $conedGroups")
+	// 4) then add those in the t-sketch
+
+
+	/*// 2) Create list of increasing numbers to weight the list by (to choose num of gammas according to the nums in
 	// this list)
 	val numPicks: List[Int] = (1 to gammasGroupsSorted.length).toList
 	// 3)  Pair the gammas and modes with the amount to choose from each group of modes
@@ -52,22 +68,24 @@ object temp_smilefitdisttryout extends App {
 	println(s"picks paired with groups: $numsGroups")
 	// 4) Take from each gamma-mode group as many as the required (cone-style, more of ones which higher mode and
 	// less of the ones with small mode, to encourage gammas to shift right)
-	val gammaModesMovingRight: List[(Double, GammaDist)] = numsGroups.flatMap{ case (n, lst) => lst.take(n) }
+	val gammaModesMovingRight: List[(Double, GammaDist)] = numsGroups.flatMap{ case (n, lst) => lst.reverse.take(n)
+		.reverse }
 	// HELP why does flatMap here work but .map.flatten have error "no implicits found for asTraversable"?
 
 	println(s"gammas moving right = ${gammaModesMovingRight}")
 
-	val gammasMovingRight: Seq[GammaDist] = gammaModesMovingRight.unzip._2 // get just the gamma dists
+	val gammasMovingRight: Seq[GammaDist] = gammaModesMovingRight.unzip._2 // get just the gamma dists*/
 
 
 
 	// NOTE: now here the NUM_MONOIDAL_ADDITIONS is replaced by shiftData.length
 	val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE))
+	val firstTD: TDigest = TDigest.sketch(shiftData.head, maxDiscrete = MAX_DISCRETE)
 
 	// Creating the sketches and combining them:
-	val shiftedSketch: Seq[TDigest] = shiftData
+	val shiftedSketch: Seq[TDigest] = shiftData.tail
 		.map((distSmp: Array[Double]) => TDigest.sketch(distSmp, maxDiscrete = MAX_DISCRETE))
-		.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd))
+		.scanLeft(firstTD)((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd, maxDiscrete = MAX_DISCRETE))
 		.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
 

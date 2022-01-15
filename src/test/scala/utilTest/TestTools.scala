@@ -46,7 +46,7 @@ object TestTools  {
 		// n2,n3,n4,n5...), and NUM_INCR = 2, then result is (n1, n2,n2, n3,n3,n3,n3, n4,n4,n4,n4,n4,n4,n4, ...)
 		final val NUM_INCR = 2
 
-		def repeatTail[T: Numeric](list: Seq[T], numReps: Int = NUM_REPEAT, numIncr: Int = NUM_INCR): Seq[T] = {
+		def repeatTail[T](list: Seq[T], numReps: Int = NUM_REPEAT, numIncr: Int = NUM_INCR): Seq[T] = {
 
 			// step 1: take the last NUM_REPEAT from end of list
 			val elemsToRepeat: Seq[T] = list.drop(list.length - numReps)
