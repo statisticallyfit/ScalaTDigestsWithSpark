@@ -15,7 +15,7 @@ import utilTest.TestTools.GeneralTools._
 /**
  *
  */
-object temp_smilefitdisttryout extends App {
+object temp_addChangingGammas extends App {
 
 	val bs = (10 to 100 by 10).map(_.toDouble).toList
 	// Li of modes that you want the distributions to have - this way, can calculate alphas out of betas and modes,
@@ -24,7 +24,7 @@ object temp_smilefitdisttryout extends App {
 	//List(10, 20, 30, 40, 50, 60, 70, 80, 90, 100).map(_.toDouble)
 	// since mode = (alpha - 1)/beta for gamma
 	val asBsModes: List[(Double, Double, Double)] = (for(m <- targetModes; b <- bs) yield((m * b + 1, b, m)))
-		//.filter {case (a, b, m) => a <= bs.max} // so that the alpha doesn't get hideously large
+	//.filter {case (a, b, m) => a <= bs.max} // so that the alpha doesn't get hideously large
 
 
 	val gammasModes: Seq[(Double, GammaDist)] = asBsModes.map { case (a, b, m) => (m, GammaDist(a, b) ) }
@@ -60,6 +60,7 @@ object temp_smilefitdisttryout extends App {
 	// 4) then add those in the t-sketch
 
 
+	// NOTE: OLD stuff here
 	/*// 2) Create list of increasing numbers to weight the list by (to choose num of gammas according to the nums in
 	// this list)
 	val numPicks: List[Int] = (1 to gammasGroupsSorted.length).toList
@@ -77,6 +78,69 @@ object temp_smilefitdisttryout extends App {
 	val gammasMovingRight: Seq[GammaDist] = gammaModesMovingRight.unzip._2 // get just the gamma dists*/
 
 
+
+	/*
+	// TODO: little test here, adding gammas manually, using modes that are moving right, to test the moving right
+	//  hypothesis can actually work, to find out what is wrong with the above code: (try increasing distance
+	//  between dists)
+	val green: GammaDist = GammaDist(9, 33) // left-placed gamma
+	val red: GammaDist = GammaDist(47, 49)
+	val purple: GammaDist = GammaDist(92, 26)
+	val orange: GammaDist = GammaDist(168, 12)
+	val small: GammaDist = GammaDist(501, 10)
+
+	val tdGreen = TDigest.sketch(green.sample(SAMPLE_SIZE))
+	val tdRed = TDigest.sketch(red.sample(SAMPLE_SIZE))
+	val tdPurple = TDigest.sketch(purple.sample(SAMPLE_SIZE))
+	val tdOrange = TDigest.sketch(orange.sample(SAMPLE_SIZE))
+	val tdSmall = TDigest.sketch(small.sample(SAMPLE_SIZE))
+
+	val smallShift: Seq[TDigest] = List(tdRed, tdPurple, tdOrange, tdSmall)
+		.scanLeft(TDigest.empty())((ltd, rtd) => TDigest.combine(ltd, rtd))
+		.drop(1)
+
+
+	val fitter: TDigest => GammaDistribution = td => GammaDistribution.fit(
+		Array.fill[Double](SAMPLE_SIZE)(td.samplePDF)
+	)
+	val makeFits: Seq[TDigest] => Seq[GammaDist] = seqTDs => seqTDs
+		.map(td => fitter(td))
+		.map(g => GammaDist(g.k, g.theta))
+
+	val makeModes: Seq[GammaDist] => Seq[Double] = seqGs => seqGs.map(g => calcMode(g))
+
+	val makeCdfDiffs: Seq[GammaDist] => Seq[Double] = seqGs => seqGs.sliding(2, 1).toList
+		.map { case List(g1, g2) => cdfSignTest(g1, g2) }
+
+	val fits = makeFits(smallShift)
+	/*val modes = fits.map(g => calcMode(g))
+	val cdfDiffs = fits.sliding(2, 1).toList.map{ case List(g1, g2) => cdfSignTest(g1, g2) }*/
+
+
+	println(s"\n\n\nCOMBINING manually separated dists by combining via tdigest: " )
+	println(s"all modes = ${makeModes(fits)}")
+	println(s"all fits = $fits")
+	println(s"all cdf sign tests ${makeCdfDiffs(fits)}")
+
+	// TODO: test 2 - making t-combines out of consecutive pairs, maybe tn the mode doesn't get so skewed each time?
+	val pairwiseTDigests: Seq[TDigest] = List(tdGreen, tdRed, tdPurple, tdOrange, tdSmall)
+		.sliding(2, 1).toList
+		.map{ case List(ltd, rtd) => TDigest.combine(ltd, rtd) }
+
+	val fitsList: Seq[GammaDist] = makeFits(pairwiseTDigests)
+
+	println(s"\n\nCOMBINING manually separated PAIRWISE dists: ")
+	println(s"all fits = ${fitsList}")
+	println(s"all modes = ${makeModes(fitsList)}")
+	println(s"all cdf diffs = ${makeCdfDiffs(fitsList)}")*/
+
+
+	// TODO - test 3 - what happens if you don't add the gmas in order of increasing mode? (as opposed to increasing
+	//  mode?)
+
+	// CONCLUSION: doesn't work -- resulting gammas are still wonky and skewed not as expected
+
+	// ----------------------------------------------------------------------
 
 	// NOTE: now here the NUM_MONOIDAL_ADDITIONS is replaced by shiftData.length
 	val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE))
@@ -120,11 +184,4 @@ object temp_smilefitdisttryout extends App {
 
 	println(s"cdf sign test = ${cdfSignTest(distFirst, distShifted)}")
 	println(s"cdf sign test = ${cdfSignTest(distShifted, distLast)}")
-
-	println()
-
-	val g2 = GammaDist(2,2)
-	val g28 = GammaDist(28, 28)
-	println(s"sign test of (2,2), (28,28): ${cdfSignTest(g2, g28)} and (28-28, 2-2)) ${cdfSignTest(g28, g2)}")
-	println(s"modes of (2,2), (28, 28): ${(calcMode(g2), calcMode(g28))}")
 }

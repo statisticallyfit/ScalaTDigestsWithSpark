@@ -64,8 +64,10 @@ libraryDependencies ++= Seq(
 	"io.github.cibotech" %% "evilplot" % "0.8.1",
 	"io.github.cibotech" %% "evilplot-repl" % "0.8.1",
 
+	// NOTE: not using cats in this project, and took it out because including xxxnell / flip library said it needs
+	//  cats 1.0.1 while mine is using 2.6.1
 	//Scalaz
-	"org.scalaz"      %% "scalaz-core"    % "7.3.5", // 7.3.0-M19
+	/*"org.scalaz"      %% "scalaz-core"    % "7.3.5", // 7.3.0-M19
 	//Cats
 	//"org.typelevel"   %% "cats"           % "1.0.1",
 	"org.typelevel" %% "cats-core" %        "2.6.1", //was 2.0.0
@@ -77,7 +79,7 @@ libraryDependencies ++= Seq(
 	"org.typelevel" %% "cats-effect" % "3.2.8",
 
 	//Shapeless
-	"com.chuusai"     %% "shapeless"      % "2.3.7", // was 2.3.3
+	"com.chuusai"     %% "shapeless"      % "2.3.7", // was 2.3.3*/
 	//Kind projector plugin
 	//"org.spire-math" %% "kind-projector" % "0.9.10", // was 0.9.9
 
@@ -104,14 +106,15 @@ libraryDependencies ++= Seq(
 	// ISARN (T-Digests with Spark work)
 	"org.isarnproject" %% "isarn-sketches" % "0.3.0",
 	"org.isarnproject" % "isarn-sketches-java" % "0.3.0",
+	"org.isarnproject" %% "isarn-sketches-spark" % "0.5.2-sp3.0",
 
 	"org.isarnproject" %% "isarn-collections" % "0.0.4",
 	"org.isarnproject" %% "isarn-algebra-api" % "0.0.3",
 	"org.isarnproject" %% "isarn-algebird-algebra-api" % "0.0.4",
 	"com.twitter" %% "algebird-core" % "0.13.4",
 
-	"org.isarnproject" %% "isarn-sketches-spark" % "0.5.2-sp3.0",
-
+	// Another t-sketch library
+	"com.xxxnell" %% "flip" % "0.0.4",
 
 	// Spark
 	"org.apache.spark" %% "spark-core" % "3.1.2",

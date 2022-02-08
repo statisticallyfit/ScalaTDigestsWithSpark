@@ -242,6 +242,8 @@ object experiment {
 		println("\nindices: ")
 		ind.foreach(v => println(v))
 
+
+		// Prepare boxplots
 		val bx1: Some[BoxRenderer] = Some(BoxRenderer.default(Some(red.copy(opacity=0.5)), Some(red), None))
 		val bx2: Some[BoxRenderer] = Some(BoxRenderer.default(Some(dodgerBlue.copy(opacity=0.5)), Some(dodgerBlue), None/*, Some(3)*/))
 

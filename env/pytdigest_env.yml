@@ -17,7 +17,7 @@ dependencies:
   - jupyterlab
   - ipywidgets
   - python-language-server
-  - ipykernel 
+  - ipykernel
 
 
   # ========================
@@ -46,14 +46,25 @@ dependencies:
   - matplotlib
   - seaborn
   - plotly
-  
-  
+
+
   # ========================
   # PIP
   # ========================
-  - pip: 
+  - pip:
       - tdigest
-  
+
+
+
+
+#### LIBS ADDED AFTER THE CONDA ENV WAS MADE USING THE YML:
+# - pomegranate (from conda)
+# - pyspark (from conda)
+
+
+
+#### LIBS TO TRY TO ADD:
+# - isarn-sketches --- how? is there a version for python?
 
 prefix: /development/bin/python/miniconda3/envs/pytdigest_env
 
