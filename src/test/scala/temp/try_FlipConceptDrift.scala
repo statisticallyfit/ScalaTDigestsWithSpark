@@ -25,6 +25,9 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 
 object VisualizeDists {
 
+	final val SAMPLE_SIZE_FROM_SKETCH: Int = 50000 // fifty thousand
+
+
 
 	// TODO show the smile dist fit over the sketch
 	// def plotFitOverSketch
@@ -33,13 +36,17 @@ object VisualizeDists {
 	def getSketchSpline(sketch: Sketch[Double]): Plot = {
 
 
+
 		// Logic to create the pdf spline (from Erik Erlandson)
-		val rawdata: List[Double] = sketch.samples(10000)._2
+		val rawdata: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
 		//val sketch: TDigest = TDigest.sketch(rawdata)
 
 		val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
 		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }
-		val (xmin, xmax) = (xdata.min, xdata.max)
+		val (xmin, xmax) = (rawdata.min, rawdata.max)
+		println(xmin, xmax)
+		// TODO weird error xMin must be less than xMax ...??
+		//(xdata.min, xdata.max)
 
 		val eps: Double = 1e-9
 		//println(s"""xdata= ${xdata.mkString(", ")}""")
@@ -92,7 +99,7 @@ object VisualizeDists {
 	def getSketchHist(sketch: Sketch[Double]): Plot = {
 
 		// Create the sample data from the sketch for the histogram
-		val rawData: List[Double] = sketch.samples(10000)._2
+		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
 		// Prepare the x-y-bounds for the graph view
 		/*val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
 		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }
@@ -144,15 +151,21 @@ object VisualizeDists {
 		val step: Int = scala.math.ceil(indexedSketches.length * 1.0 / howManyToShow).toInt
 		val shorterIndexedSketches = indexedSketches.filter{ case (idx, _) => idx % step == 0}
 
+
+		// TODO DEBUGGING the xmin < xmax error
+		/*val (h, s) = (getSketchHist(shorterIndexedSketches.last._2), getSketchSpline(shorterIndexedSketches.last._2))*/
+
+		val tempselect = Seq(shorterIndexedSketches(1), shorterIndexedSketches(2), shorterIndexedSketches(3), shorterIndexedSketches(4))
+
 		// Get samples each sketch in order to create the splines / hists
 		// TODO Pair up colors with hist and splines
-		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
+		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = tempselect //shorterIndexedSketches
 			.map{ case (idx, skt) => (idx, skt, getSketchHist(skt), getSketchSpline(skt))}
 
 
 		val allPlots: Seq[Plot] = sketchesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
 
-		val plt: Drawable = Overlay(allPlots:_*)
+		val plt: Drawable = Overlay(allPlots:_*) //Overlay(h, s)
 			.xAxis()
 			.yAxis()
 			.frame()
@@ -197,7 +210,8 @@ object try_FlipConceptDrift extends App {
 
 
 	val expName = "incremental-cd-normal"
-	val dataNo = 1000
+	val dataNo = 30000 // TODO DEBUG next reduce sample_size_from_sketch and increasea this one to 50,000
+	// changed dataNo (was 1000)
 	val draftStart = 300
 	val draftStartingPoint = 0.0
 	val velocity = 0.01
@@ -206,15 +220,19 @@ object try_FlipConceptDrift extends App {
 		if (draftStart > idx) draftStartingPoint
 		else draftStartingPoint + velocity * (idx - draftStart)
 	def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 1.0, idx)
+	// Creating list of samples from underlying distribution, length = dataNo = 1000
 	val datas: List[Double] = (0 to dataNo).toList.map(idx => underlying(idx).sample._2)
 
 	implicit val conf: SketchConf = SketchConf(
-		cmapStart = Some(-20.0),
-		cmapEnd = Some(20.0)
+		cmapStart = Some(-40.0),
+		cmapEnd = Some(40.0) // TODO changed here from (-20, 20)
 	)
 	val sketch0 = Sketch.empty[Double]
 	val sketchTraces = sketch0 :: sketch0.updateTrace(datas)
 	val idxSketches = sketchTraces.indices.zip(sketchTraces).toList.filter { case (idx, _) => idx % 10 == 0 } // so dataNo (1000) / 10 = 100 elements left
+
+
+	plotMovingHistsWithSpline(idxSketches.unzip._2)
 
 
 	// TODO: histogram-plot every 250th one because there are 1000 sketches so just to see 4 of them (moving right)
@@ -224,14 +242,14 @@ object try_FlipConceptDrift extends App {
 		.samples(5000)) }
 
 
-	println(s"samples from 11th sketch = ${idxPdf2(10)._2._2}")
-	//plotDistsFromSketches(Seq(idxPdf2(10)._2))
-	println(s"samples from 91th sketch = ${idxPdf2(90)._2._2}")
-	//plotMovingDistsFromSketches(Seq(idxPdf2(90)._2))
-	getSketchSpline(sketchTraces(20))
-	getSketchHist(sketchTraces(20))
-	getSketchHist(sketchTraces(95))
-	getSketchSpline(sketchTraces(95))
+//	println(s"samples from 11th sketch = ${idxPdf2(10)._2._2}")
+//	//plotDistsFromSketches(Seq(idxPdf2(10)._2))
+//	println(s"samples from 91th sketch = ${idxPdf2(90)._2._2}")
+//	//plotMovingDistsFromSketches(Seq(idxPdf2(90)._2))
+//	getSketchSpline(sketchTraces(20))
+//	getSketchHist(sketchTraces(20))
+//	getSketchHist(sketchTraces(95))
+//	getSketchSpline(sketchTraces(95))
 
 
 
