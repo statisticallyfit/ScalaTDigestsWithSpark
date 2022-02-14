@@ -155,11 +155,12 @@ object VisualizeDists {
 		// TODO DEBUGGING the xmin < xmax error
 		/*val (h, s) = (getSketchHist(shorterIndexedSketches.last._2), getSketchSpline(shorterIndexedSketches.last._2))*/
 
-		val tempselect = Seq(shorterIndexedSketches(1), shorterIndexedSketches(2), shorterIndexedSketches(3), shorterIndexedSketches(4))
+		/*val tempselect = Seq(shorterIndexedSketches(1), shorterIndexedSketches(2), shorterIndexedSketches(3), shorterIndexedSketches(4))*/
 
 		// Get samples each sketch in order to create the splines / hists
 		// TODO Pair up colors with hist and splines
-		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = tempselect //shorterIndexedSketches
+		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
+			.drop(1) // to avoid the xmin not < xmax error
 			.map{ case (idx, skt) => (idx, skt, getSketchHist(skt), getSketchSpline(skt))}
 
 
@@ -210,7 +211,7 @@ object try_FlipConceptDrift extends App {
 
 
 	val expName = "incremental-cd-normal"
-	val dataNo = 30000 // TODO DEBUG next reduce sample_size_from_sketch and increasea this one to 50,000
+	val dataNo = 10000 // TODO DEBUG next reduce sample_size_from_sketch and increasea this one to 50,000
 	// changed dataNo (was 1000)
 	val draftStart = 300
 	val draftStartingPoint = 0.0
@@ -219,27 +220,30 @@ object try_FlipConceptDrift extends App {
 	def center(idx: Int) =
 		if (draftStart > idx) draftStartingPoint
 		else draftStartingPoint + velocity * (idx - draftStart)
-	def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 1.0, idx)
+	def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
 	// Creating list of samples from underlying distribution, length = dataNo = 1000
 	val datas: List[Double] = (0 to dataNo).toList.map(idx => underlying(idx).sample._2)
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
-		cmapEnd = Some(40.0) // TODO changed here from (-20, 20)
+		cmapEnd = Some(40.0) // TODO changed here from (-20, 20) --- what does this do?
 	)
 	val sketch0 = Sketch.empty[Double]
 	val sketchTraces = sketch0 :: sketch0.updateTrace(datas)
 	val idxSketches = sketchTraces.indices.zip(sketchTraces).toList.filter { case (idx, _) => idx % 10 == 0 } // so dataNo (1000) / 10 = 100 elements left
 
 
+	// NOTE: print the data length
+	println(datas.length)
+	println(idxSketches.length)
 	plotMovingHistsWithSpline(idxSketches.unzip._2)
 
 
 	// TODO: histogram-plot every 250th one because there are 1000 sketches so just to see 4 of them (moving right)
 	// TODO 2: fit the distribution FUNCTION (using smile scala lib) and plot those usinhe Function.series plot vegas
-	val idxPdf = idxSketches.map { case (idx, skt) => (idx, skt.barPlot.csv) }
-	val idxPdf2: List[(Int, (Sketch[Double], List[Double]))] = idxSketches.map { case (idx, skt) => (idx, skt
-		.samples(5000)) }
+//	val idxPdf = idxSketches.map { case (idx, skt) => (idx, skt.barPlot.csv) }
+//	val idxPdf2: List[(Int, (Sketch[Double], List[Double]))] = idxSketches.map { case (idx, skt) => (idx, skt
+//		.samples(5000)) }
 
 
 //	println(s"samples from 11th sketch = ${idxPdf2(10)._2._2}")
