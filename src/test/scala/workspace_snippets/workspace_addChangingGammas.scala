@@ -1,4 +1,4 @@
-package temp
+package workspace_snippets
 
 import org.isarnproject.sketches.TDigest
 import util.GeneralUtil
@@ -15,7 +15,7 @@ import utilTest.TestTools.GeneralTools._
 /**
  *
  */
-object temp_addChangingGammas extends App {
+object workspace_addChangingGammas extends App {
 
 	val bs = (10 to 100 by 10).map(_.toDouble).toList
 	// Li of modes that you want the distributions to have - this way, can calculate alphas out of betas and modes,

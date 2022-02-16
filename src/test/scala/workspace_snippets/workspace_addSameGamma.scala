@@ -1,4 +1,4 @@
-package temp
+package workspace_snippets
 
 
 import org.isarnproject.sketches.TDigest
@@ -18,7 +18,7 @@ import smile.stat.distribution.GammaDistribution
 /**
  *
  */
-object temp_addsamegamma extends App {
+object workspace_addSameGamma extends App {
 
 
 	val (a1, b1) = (2.5, 10.0)
