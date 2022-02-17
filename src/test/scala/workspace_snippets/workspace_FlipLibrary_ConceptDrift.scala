@@ -10,7 +10,10 @@ import com.cibo.evilplot.numeric.Bounds
 import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import com.cibo.evilplot.plot.renderers.BarRenderer
+import com.cibo.evilplot.colors.Color
+
 import com.manyangled.snowball.analysis.interpolation.MonotonicSplineInterpolator
+
 import flip.implicits._
 import flip.pdf.Sketch
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
@@ -33,7 +36,7 @@ object VisualizeDists {
 	// def plotFitOverSketch
 
 	// Show the spline from a sketch (no histogram, just simple spline)
-	def getSketchSpline(sketch: Sketch[Double]): Plot = {
+	def getSketchSpline(sketch: Sketch[Double], splineColor: Color): Plot = {
 
 
 
@@ -78,7 +81,7 @@ object VisualizeDists {
 		val splineplot: Plot = FunctionPlot.series(
 			function = (x:Double) => makePDFSpline(x),
 			name = "spline-cdf-gradient",
-			color = HTMLNamedColors.darkMagenta,
+			color = splineColor, //HTMLNamedColors.darkMagenta,
 			xbounds = Some(Bounds(xmin, xmax))
 		)
 		splineplot
@@ -96,7 +99,7 @@ object VisualizeDists {
 
 
 	// plot histogram from the sketch (one single one)
-	def getSketchHist(sketch: Sketch[Double]): Plot = {
+	def getSketchHist(sketch: Sketch[Double], histColor: Color): Plot = {
 
 		// Create the sample data from the sketch for the histogram
 		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
@@ -107,7 +110,8 @@ object VisualizeDists {
 
 		val makeHist: Seq[Double] => Plot = data => Histogram(
 			data,
-			barRenderer = Some(BarRenderer.default(Some(HTMLNamedColors.blueViolet.copy(opacity = 0.25)))),
+			//barRenderer = Some(BarRenderer.default(Some(HTMLNamedColors.blueViolet.copy(opacity = 0.25)))),
+			barRenderer = Some(BarRenderer.default(color = Some(histColor.opacity(0.25)))),
 			binningFunction = Histogram.density,
 			xbounds = Some(Bounds(data.min, data.max)) // find the xbounds
 		)
@@ -125,9 +129,9 @@ object VisualizeDists {
 	}
 
 
-	def plotHistAndSpline(sketch: Sketch[Double]): Any = {
-		val histPlot: Plot = getSketchHist(sketch)
-		val splinePlot: Plot = getSketchSpline(sketch)
+	def plotHistAndSpline(sketch: Sketch[Double], histSplineColor: Color): Any = {
+		val histPlot: Plot = getSketchHist(sketch, histSplineColor)
+		val splinePlot: Plot = getSketchSpline(sketch, histSplineColor)
 
 		// overlay (combine the plots)
 		val overlayPlot = Overlay(histPlot, splinePlot)
@@ -157,6 +161,8 @@ object VisualizeDists {
 
 		/*val tempselect = Seq(shorterIndexedSketches(1), shorterIndexedSketches(2), shorterIndexedSketches(3), shorterIndexedSketches(4))*/
 
+		val colorSeq: Seq[Color] = Color.getGradientSeq(shorterIndexedSketches.length)
+
 		// Get samples each sketch in order to create the splines / hists
 		// TODO Pair up colors with hist and splines
 		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
@@ -176,33 +182,6 @@ object VisualizeDists {
 
 		displayPlot(plt)
 	}
-
-	/*def plotMovingDistsFromSketches(pairs: Seq[(Sketch[Double], Seq[Double])]): Any = {
-
-		// Make the histogram objects
-		val makeHist: Seq[Double] => Plot = data => Histogram(
-			data,
-			barRenderer = Some(BarRenderer.default(Some(HTMLNamedColors.green.copy(opacity = 0.25)))),
-			binningFunction = Histogram.density,
-			xbounds = Some(Bounds(data.min, data.max)) // find the xbounds
-		)
-
-
-		val theHists: Seq[Plot] = pairs.map{ case (sketch, dataFromSketch) => makeHist(dataFromSketch)}
-
-		// NOTE:  combining plots here will also combine the xbounds and ybounds
-		val plt: Drawable = Overlay(theHists:_*)
-			.xAxis()
-			.yAxis()
-			.frame()
-			.xLabel("x")
-			.yLabel("y").render()
-		/*.overlayLegend(x=0.8).*/
-
-		///publish.png(plt.asBufferedImage)
-		displayPlot(plt)
-	}*/
-
 
 }
 import VisualizeDists._

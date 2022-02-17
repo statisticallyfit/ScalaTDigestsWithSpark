@@ -14,6 +14,8 @@ import com.cibo.evilplot.plot.renderers.{BarRenderer, BoxRenderer}
 /**
  *
  */
+// TODO goal: to plot bars , each a different color --- not working!
+
 object SeeColors extends App {
 
 	final val NUM_COLORS = 50 //148 // had to count this manually -- another way?
@@ -44,26 +46,4 @@ object SeeColors extends App {
 		/*.overlayLegend(x = 0.8)*/
 		.render()
 	)
-
-
-	/*val makeBarChart: (Seq[Int], Color) => Plot = (hgts, color) =>
-		BarChart.custom(
-			bars = hgts.map(h => Bar.apply(h)),
-			spacing = Some(20),
-			barRenderer = Some(BarRenderer.default(Some(color)))
-		)
-
-	val bars: Plot = Overlay(
-		heightsColors.map { case (hs, c) => makeBarChart(hs, c) }:_*
-	)
-
-	displayPlot( bars
-		.xAxis()
-		.yAxis()
-		.frame()
-		.xLabel("x")
-		.yLabel("y")
-		/*.overlayLegend(x = 0.8)*/
-		.render()
-	)*/
 }
