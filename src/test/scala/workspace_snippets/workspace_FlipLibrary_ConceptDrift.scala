@@ -166,8 +166,9 @@ object VisualizeDists {
 		// Get samples each sketch in order to create the splines / hists
 		// TODO Pair up colors with hist and splines
 		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
+			.zip(colorSeq)
 			.drop(1) // to avoid the xmin not < xmax error
-			.map{ case (idx, skt) => (idx, skt, getSketchHist(skt), getSketchSpline(skt))}
+			.map{ case ((idx, skt), color) => (idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color))}
 
 
 		val allPlots: Seq[Plot] = sketchesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
@@ -186,7 +187,10 @@ object VisualizeDists {
 }
 import VisualizeDists._
 
-object try_FlipConceptDrift extends App {
+
+
+
+object workspace_FlipLibrary_ConceptDrift extends App {
 
 
 	val expName = "incremental-cd-normal"
