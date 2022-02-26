@@ -15,7 +15,7 @@ import utilTest.TestTools.GeneralTools._
 /**
  *
  */
-object workspace_addChangingGammas extends App {
+object try_Isarn_AddChangingGammas_MANY extends App {
 
 	val bs = (10 to 100 by 10).map(_.toDouble).toList
 	// Li of modes that you want the distributions to have - this way, can calculate alphas out of betas and modes,
@@ -153,7 +153,7 @@ object workspace_addChangingGammas extends App {
 		.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
 
-	// see how convergence is at the last combination
+	// see how convergence is at the last update (after combining the sketches from ALL the distributions)
 	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
 
 

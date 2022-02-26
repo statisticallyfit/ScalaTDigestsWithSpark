@@ -1,21 +1,21 @@
-package workspace_snippets
+package Project_TSketches.SmileLibrary
 
-import smile.stat.distribution._ //{ExponentialDistribution, GammaDistribution, GaussianDistribution, Mixture}
 
 import com.cibo.evilplot._
-import com.cibo.evilplot.plot._
-import com.cibo.evilplot.colors.HTMLNamedColors.{dodgerBlue, red}
-import com.cibo.evilplot.colors._
-import com.cibo.evilplot.colors.Color
+import com.cibo.evilplot.colors.{Color, HTMLNamedColors}
 import com.cibo.evilplot.geometry.Drawable
 import com.cibo.evilplot.numeric.Bounds
+import com.cibo.evilplot.plot._
+import com.cibo.evilplot.numeric._ // Point
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
-import com.cibo.evilplot.plot.renderers.{BarRenderer, BoxRenderer, PathRenderer}
+import com.cibo.evilplot.plot.renderers.BarRenderer
+
+import smile.stat.distribution._
 
 /**
  * SOURCE = https://hyp.is/t6jNCI8GEeyS1EfGwkEMEQ/haifengl.github.io/statistics.html
  */
-object workspace_SmileLibrary_Mixture_ParamAndNonparametric extends App {
+object Example_SmileLib_MixtureModel_NonParametric extends App {
 
 	/**
 	 * PARAMETRIC CASE:
@@ -46,8 +46,6 @@ object workspace_SmileLibrary_Mixture_ParamAndNonparametric extends App {
 	Console.println(estimatedMixture)
 
 
-
-
 	/**
 	 * NONPARAMETRIC METHOD:
 	 *
@@ -55,7 +53,7 @@ object workspace_SmileLibrary_Mixture_ParamAndNonparametric extends App {
 	 * Kernel density estimation is a fundamental data smoothing problem where inferences about the population
 	 * are made, based on a finite data sample. It is also known as the Parzen window method.
 	 */
-		// TODO plot kernel density estimation
+	// TODO plot kernel density estimation
 	val k = new KernelDensity(sampleData)
 	// Now compare getting probability from the kernel densy way (nonparametric) vs. the mixture componenet way
 	// (parametric):
@@ -82,9 +80,6 @@ object workspace_SmileLibrary_Mixture_ParamAndNonparametric extends App {
 	val makeCanonicalMixture: Double => Double = x => canonicalMixture.p(x)
 	val makeEstimatedMixture: Double => Double = x => estimatedMixture.p(x)
 	val makeKernel: Double => Double = x => k.p(x)
-
-
-
 
 
 	// Create histogram of data
@@ -126,7 +121,7 @@ object workspace_SmileLibrary_Mixture_ParamAndNonparametric extends App {
 	//)
 
 
-	displayPlot(Overlay((histPlot +: densityPlots):_* )
+	displayPlot(Overlay((histPlot +: densityPlots): _*)
 		.standard()
 		.overlayLegend()
 		.xbounds(xMIN, xMAX) // args for the function
@@ -144,7 +139,6 @@ object workspace_SmileLibrary_Mixture_ParamAndNonparametric extends App {
 		.standard()
 		.xbounds(xMIN, xMAX) // args for the function
 		.render()*/
-
 
 
 }

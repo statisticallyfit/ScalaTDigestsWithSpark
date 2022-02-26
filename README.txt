@@ -16,8 +16,8 @@ Exception in thread "main" java.lang.UnsupportedClassVersionError: com/manyangle
 	at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:355)
 	at java.lang.ClassLoader.loadClass(ClassLoader.java:351)
 	at CDFSpline$.generateSpliningComparisons(CDFSpline.scala:44)
-	at util.CDFSplineRunner$.delayedEndpoint$util.CDFSplineRunner$1(CDFSpline.scala:131)
-	at util.CDFSplineRunner$delayedInit$body.apply(CDFSpline.scala:127)
+	at util.graph.CDFSplineRunner$.delayedEndpoint$util.graph.CDFSplineRunner$1(CDFSpline.scala:131)
+	at util.graph.CDFSplineRunner$delayedInit$body.apply(CDFSpline.scala:127)
 	at scala.Function0.apply$mcV$sp(Function0.scala:39)
 	at scala.Function0.apply$mcV$sp$(Function0.scala:39)
 	at scala.runtime.AbstractFunction0.apply$mcV$sp(AbstractFunction0.scala:17)
@@ -25,8 +25,8 @@ Exception in thread "main" java.lang.UnsupportedClassVersionError: com/manyangle
 	at scala.collection.immutable.List.foreach(List.scala:431)
 	at scala.App.main(App.scala:80)
 	at scala.App.main$(App.scala:78)
-	at util.CDFSplineRunner$.main(CDFSpline.scala:127)
-	at util.CDFSplineRunner.main(CDFSpline.scala)
+	at util.graph.CDFSplineRunner$.main(CDFSpline.scala:127)
+	at util.graph.CDFSplineRunner.main(CDFSpline.scala)
 
 
 

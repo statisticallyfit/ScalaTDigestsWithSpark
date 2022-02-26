@@ -1,4 +1,4 @@
-package util
+package util.graph
 
 /**
  * File Source = https://github.com/erikerlandson/cdf-splining-prototype/blob/master/cdf-splining-poc.ipynb

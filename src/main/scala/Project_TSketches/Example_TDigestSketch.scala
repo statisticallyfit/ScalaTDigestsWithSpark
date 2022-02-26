@@ -1,4 +1,4 @@
-package Project_IsarnSketches
+package Project_TSketches
 
 /**
  *
@@ -8,7 +8,7 @@ package Project_IsarnSketches
 //import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import org.apache.commons.math3.distribution.GammaDistribution
 import org.isarnproject.sketches.TDigest
-import util.GraphCDFSpline
+import util.graph.GraphCDFSpline
 
 
 object Example_TDigestSketch extends App {

@@ -1,4 +1,4 @@
-package Project_IsarnSketches
+package Project_TSketches
 
 import util.GeneralUtil
 import util.distributionExtensions.distributions._

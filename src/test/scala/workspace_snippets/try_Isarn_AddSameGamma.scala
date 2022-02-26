@@ -18,7 +18,7 @@ import smile.stat.distribution.GammaDistribution
 /**
  *
  */
-object workspace_addSameGamma extends App {
+object try_Isarn_AddSameGamma extends App {
 
 
 	val (a1, b1) = (2.5, 10.0)
