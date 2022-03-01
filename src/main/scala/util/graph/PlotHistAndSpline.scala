@@ -5,6 +5,7 @@ package util.graph
 // Plotting imports
 import com.cibo.evilplot._
 import com.cibo.evilplot.colors.Color
+import com.cibo.evilplot.colors.HTMLNamedColors
 import com.cibo.evilplot.geometry.Drawable
 import com.cibo.evilplot.numeric.Bounds
 import com.cibo.evilplot.plot._
@@ -34,12 +35,12 @@ object PlotHistAndSpline {
 	def getSketchSpline(sketch: Sketch[Double], splineColor: Color): Plot = {
 
 		// Logic to create the pdf spline (from Erik Erlandson)
-		val rawdata: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
+		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
 		//val sketch: TDigest = TDigest.sketch(rawdata)
 
 		val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
 		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }
-		val (xmin, xmax) = (rawdata.min, rawdata.max)
+		val (xmin, xmax) = (sampleData.min, sampleData.max)
 		println(xmin, xmax)
 		// TODO weird error xMin must be less than xMax ...??
 		//(xdata.min, xdata.max)
@@ -81,6 +82,30 @@ object PlotHistAndSpline {
 
 	}
 
+	def getSpline(sampleData: Seq[Double], splineColor: Color): Plot = {
+
+		// NOTE: need to generate a sketch here in order to calculaet from the inverse cdf, the xdata
+		val emptySketch = Sketch.empty[Double]
+		val sketch = sampleData.foldLeft(emptySketch) {
+			case (sketch, sampleValue) => sketch.update(sampleValue)
+		}
+
+		getSketchSpline(sketch, splineColor)
+
+	}
+
+	def getHist(data: Seq[Double], histColor: Color): Plot = {
+
+		val makeHist: Seq[Double] => Plot = data => Histogram(
+			data,
+			//barRenderer = Some(BarRenderer.default(Some(HTMLNamedColors.blueViolet.copy(opacity = 0.25)))),
+			barRenderer = Some(BarRenderer.default(color = Some(histColor.opacity(0.25)))),
+			binningFunction = Histogram.density,
+			xbounds = Some(Bounds(data.min, data.max)) // find the xbounds
+		)
+
+		makeHist(data)
+	}
 
 	// plot histogram from the sketch (one single one)
 	def getSketchHist(sketch: Sketch[Double], histColor: Color): Plot = {
@@ -120,6 +145,44 @@ object PlotHistAndSpline {
 		displayPlot(overlayPlot)
 	}
 
+	def plotMovingTimeDataWithSpline(timeData: Seq[(Int, Seq[Double])], HOW_MANY: Int = 10): Any = {
+		// Select just few for plotting (max 5 for now)
+		val howManyToShow: Int = HOW_MANY
+		val step: Int = scala.math.ceil(timeData.length * 1.0 / howManyToShow).toInt
+		val shorterIndexedSamples = timeData.filter{ case (idx, _) => idx % step == 0}
+
+		//val colorSeq: Seq[Color] = Color.getGradientSeq(shorterIndexedSamples.length)
+
+		val BLACK = HTMLNamedColors.black
+
+		// Get samples each sketch in order to create the splines / hists
+		val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
+			.drop(1) // to avoid the xmin not < xmax error
+			.map{ case (idx, samp) => (idx, samp, getHist(samp, BLACK), getSpline(samp, BLACK))}
+		/*val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
+			.zip(colorSeq)
+			.drop(1) // to avoid the xmin not < xmax error
+			.map{ case ((idx, samp), color) => (idx, samp, getHist(samp, color), getSpline(samp, color))}*/
+
+		val allPlots: Seq[Plot] = samplesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
+
+		val plt: Drawable = Overlay(allPlots:_*) //Overlay(h, s)
+			.xAxis()
+			.yAxis()
+			.standard() //.frame()
+			.xLabel("x")
+			.yLabel("y").render()
+		/*.overlayLegend(x=0.8).*/
+
+		displayPlot(plt)
+	}
+
+
+	def plotMovingDataWithSpline(datas: Seq[Seq[Double]], HOW_MANY: Int = 10): Any = {
+		val indexedSamples: Seq[(Int, Seq[Double])] = datas.indices.zip(datas)
+
+		plotMovingTimeDataWithSpline(indexedSamples, HOW_MANY)
+	}
 
 	def plotMovingHistsWithSpline(sketches: Seq[Sketch[Double]], HOW_MANY: Int = 5): Any = {
 		// Create indexed list of sketches

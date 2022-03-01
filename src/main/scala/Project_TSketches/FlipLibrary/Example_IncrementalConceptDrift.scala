@@ -46,12 +46,28 @@ object Example_IncrementalConceptDrift extends App {
 		if (draftStart > idx) draftStartingPoint
 		else draftStartingPoint + velocity * (idx - draftStart)
 	def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
-	// Creating list of samples from underlying distribution, length = dataNo = 1000
+	// Creating list of samples from underlying distribution, length = dataNo = 1000 - taking one sample point from
+	// the dist
 	val datas: List[Double] = (0 to dataNo).toList.map(idx => underlying(idx).sample._2)
+
+
+
+	// TODO ATTEMPT: graphing the time  - with - dist-sketch ---------------------------------------------------------------
+
+	val SAMPLE_NUM_FOR_TIME_DIST = 1000
+
+	val distTimePairs: List[(Int, List[Double])] = (0 to dataNo).toList.map(time =>
+		(time, underlying(time).samples(SAMPLE_NUM_FOR_TIME_DIST)._2 )
+	) // take a dist-worthy sample
+
+	plotMovingTimeDataWithSpline(distTimePairs, HOW_MANY = 20)
+
+
+	// ----------------------------------------------------------------------------------------------------------------
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
-		cmapEnd = Some(40.0) // TODO changed here from (-20, 20) --- what does this do?
+		cmapEnd = Some(40.0) // NOTE changed here from (-20, 20) --- what does this do?
 	)
 	val sketch0 = Sketch.empty[Double]
 	val sketchTraces = sketch0 :: sketch0.updateTrace(datas)
@@ -69,12 +85,9 @@ object Example_IncrementalConceptDrift extends App {
 	//val idxCdf = idxSketches.map { case (idx, sketch) => (idx, sketch.cdfSampling.csv) }
 
 
-	// TODO plot these measures as boxplots
 
-	// TODO some to get total of 50 (1000/50 = 20 so every 20th one) -- to see how this measure goes down as sketch
-	//  count increases (diff between udnerlying and sketch should get smaller)
-	val idxDel = idxSketches.map { case (idx, sketch) => (idx, Delta(underlying(idx), sketch).csv) }
-	// TODO plot kl divergences
+	/*val idxDel = idxSketches.map { case (idx, sketch) => (idx, Delta(underlying(idx), sketch).csv) }
+
 	val idxKld = idxSketches.map { case (idx, sketch) => (idx, KLD(underlying(idx), sketch)) }
 	val idxKldNaNFree = idxKld.filter {case (idx, measure) => ! measure.isNaN}
 
@@ -88,7 +101,7 @@ object Example_IncrementalConceptDrift extends App {
 		.render()
 	)
 
-	// TODO plot
+
 	val idxCos = idxSketches.map { case (idx, sketch) => (idx, Cosine(underlying(idx), sketch)) }
 	val idxCosNaNFree = idxCos.filter {case (idx, measure) => ! measure.isNaN}
 
@@ -102,7 +115,7 @@ object Example_IncrementalConceptDrift extends App {
 		.render()
 	)
 
-	// TODO plot
+
 	val idxEuc = idxSketches.map { case (idx, sketch) => (idx, Euclidean(underlying(idx), sketch)) }
 	val idxEucNaNFree = idxEuc.filter {case (idx, measure) => ! measure.isNaN}
 
@@ -152,8 +165,6 @@ object Example_IncrementalConceptDrift extends App {
 	val str = s"Similarity for incremental concept-drifted data stream with velocity $velocity: \n" +
 		s" KLD: $avgKld \n" +
 		s" Cosine: $avgCos \n" +
-		s" Euclidean: $avgEuc \n"/* +
-		s" Memory usage (byte): $mem"
-	println(str)*/
+		s" Euclidean: $avgEuc \n"*/
 
 }
