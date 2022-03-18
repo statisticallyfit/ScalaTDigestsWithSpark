@@ -70,14 +70,23 @@ object Example_IncrementalConceptDrift extends App {
 		cmapEnd = Some(40.0) // NOTE changed here from (-20, 20) --- what does this do?
 	)
 	val sketch0 = Sketch.empty[Double]
-	val sketchTraces = sketch0 :: sketch0.updateTrace(datas)
-	val idxSketches = sketchTraces.indices.zip(sketchTraces).toList.filter { case (idx, _) => idx % 10 == 0 } // so dataNo (1000) / 10 = 100 elements left
+
+	// TODO test what happens when you change .sample(1) to .sample(500)
+	val sketchTraces: List[Sketch[Double]] = sketch0 :: sketch0.updateTrace(datas)
+
+	val timeSketches: List[(Int, Sketch[Double])] = sketchTraces.indices.zip(sketchTraces)
+		.toList.filter { case (idx, _) => idx % 10 == 0 }
+	// so dataNo (1000) / 10 = 100 elements left
 
 
 	// NOTE: print the data length
 	println(datas.length)
-	println(idxSketches.length)
-	plotMovingHistsWithSpline(idxSketches.unzip._2)
+	println(timeSketches.length)
+
+	// NOTE: Indeed the x-axis represents time because the `updateTrace` from Flip returns one sketch per sampled
+	//  value that corresponds to the time (index) it was mapped to, so then you can say that sketch corresponds to that
+	//  time  (index).
+	plotMovingHistsWithSpline(timeSketches.unzip._2)
 
 
 

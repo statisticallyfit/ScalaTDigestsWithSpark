@@ -65,7 +65,7 @@ object Example_SmileLib_MixtureModel_NonParametric extends App {
 	// PLOTTING
 
 
-	// generate data frome canonical mixture:
+	// generate data from canonical mixture:
 	val (xMIN, xMAX): (Int, Int) = (sampleData.min.toInt, sampleData.max.toInt)
 	println(xMIN, xMAX)
 
@@ -127,18 +127,5 @@ object Example_SmileLib_MixtureModel_NonParametric extends App {
 		.xbounds(xMIN, xMAX) // args for the function
 		.render()
 	)
-
-	/*val plt = Overlay(
-		FunctionPlot(
-			function = makeCanonicalMixture,
-			xbounds = Some(Bounds(xMIN, xMAX)),
-			pathRenderer = Some(PathRenderer.default(color = Some(color)))
-		),
-
-	)
-		.standard()
-		.xbounds(xMIN, xMAX) // args for the function
-		.render()*/
-
 
 }
