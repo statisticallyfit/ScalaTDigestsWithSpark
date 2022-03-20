@@ -26,7 +26,7 @@ import smile.stat.distribution.{KernelDensity, Mixture}
 
 object PlotHistAndSpline {
 
-	final val SAMPLE_SIZE_FROM_SKETCH: Int = 50000 // fifty thousand
+	final val SAMPLE_SIZE_FROM_SKETCH: Int = 8000 //50000 // fifty thousand
 
 
 
@@ -81,7 +81,6 @@ object PlotHistAndSpline {
 			xbounds = Some(Bounds(xmin, xmax))
 		)
 		splineplot
-
 	}
 
 	def getSpline(sampleData: Seq[Double], splineColor: Color): Plot = {
@@ -93,7 +92,6 @@ object PlotHistAndSpline {
 		}
 
 		getSketchSpline(sketch, splineColor)
-
 	}
 
 	def getHist(data: Seq[Double], histColor: Color): Plot = {
@@ -114,24 +112,15 @@ object PlotHistAndSpline {
 
 		// Create the sample data from the sketch for the histogram
 		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
-		// Prepare the x-y-bounds for the graph view
-		/*val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
-		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }
-		val (xmin, xmax) = (xdata.min, xdata.max)*/
 
-		val makeHist: Seq[Double] => Plot = data => Histogram(
-			data,
-			//barRenderer = Some(BarRenderer.default(Some(HTMLNamedColors.blueViolet.copy(opacity = 0.25)))),
-			barRenderer = Some(BarRenderer.default(color = Some(histColor.opacity(0.25)))),
-			binningFunction = Histogram.density,
-			xbounds = Some(Bounds(data.min, data.max)) // find the xbounds
-		)
-
-		makeHist(rawData)
+		getHist(rawData, histColor)
 	}
 
 
-	def plotHistAndSpline(sketch: Sketch[Double], histSplineColor: Color): Any = {
+	def plotHistSplineFromOneSketch(sketch: Sketch[Double],
+							  histSplineColor: Color,
+							  titleName: Option[String] = None): Any = {
+
 		val histPlot: Plot = getSketchHist(sketch, histSplineColor)
 		val splinePlot: Plot = getSketchSpline(sketch, histSplineColor)
 
@@ -139,6 +128,7 @@ object PlotHistAndSpline {
 		val overlayPlot = Overlay(histPlot, splinePlot)
 			.xAxis()
 			.yAxis()
+			.title(titleName.getOrElse(""))
 			.standard() //.frame()
 			.xLabel("x")
 			.yLabel("y")
@@ -147,7 +137,9 @@ object PlotHistAndSpline {
 		displayPlot(overlayPlot)
 	}
 
-	def plotMovingTimeDataWithSpline(timeData: Seq[(Int, Seq[Double])], HOW_MANY: Int = 10): Any = {
+	def plotHistSplineFromTimeData(timeData: Seq[(Int, Seq[Double])],
+							 titleName: Option[String] = None,
+							 HOW_MANY: Int = 10): Any = {
 		// Select just few for plotting (max 5 for now)
 		val howManyToShow: Int = HOW_MANY
 		val step: Int = scala.math.ceil(timeData.length * 1.0 / howManyToShow).toInt
@@ -160,7 +152,9 @@ object PlotHistAndSpline {
 		// Get samples each sketch in order to create the splines / hists
 		val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
 			.drop(1) // to avoid the xmin not < xmax error
-			.map{ case (idx, samp) => (idx, samp, getHist(samp, BLACK), getSpline(samp, BLACK))}
+			.map{ case (idx, samp) =>
+				(idx, samp, getHist(samp, BLACK), getSpline(samp, BLACK))
+			}
 		/*val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
 			.zip(colorSeq)
 			.drop(1) // to avoid the xmin not < xmax error
@@ -171,6 +165,7 @@ object PlotHistAndSpline {
 		val plt: Drawable = Overlay(allPlots:_*) //Overlay(h, s)
 			.xAxis()
 			.yAxis()
+			.title(titleName.getOrElse(""))
 			.standard() //.frame()
 			.xLabel("x")
 			.yLabel("y").render()
@@ -180,13 +175,18 @@ object PlotHistAndSpline {
 	}
 
 
-	def plotMovingDataWithSpline(datas: Seq[Seq[Double]], HOW_MANY: Int = 10): Any = {
+	def plotHistSplineFromData(datas: Seq[Seq[Double]],
+						  titleName: Option[String] = None,
+						  HOW_MANY: Int = 10): Any = {
+
 		val indexedSamples: Seq[(Int, Seq[Double])] = datas.indices.zip(datas)
 
-		plotMovingTimeDataWithSpline(indexedSamples, HOW_MANY)
+		plotHistSplineFromTimeData(indexedSamples, titleName, HOW_MANY)
 	}
 
-	def plotMovingHistsWithSpline(sketches: Seq[Sketch[Double]], HOW_MANY: Int = 5): Any = {
+	def plotHistSplineFromSketches(sketches: Seq[Sketch[Double]],
+							 titleName: Option[String] = None,
+							 HOW_MANY: Int = 5): Any = {
 		// Create indexed list of sketches
 		val indexedSketches: Seq[(Int, Sketch[Double])] = sketches.indices.zip(sketches)
 
@@ -201,22 +201,23 @@ object PlotHistAndSpline {
 		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
 			.zip(colorSeq)
 			.drop(1) // to avoid the xmin not < xmax error
-			.map{ case ((idx, skt), color) => (idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color))}
+			.map{ case ((idx, skt), color) =>
+				(idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color))
+			}
 
 		val allPlots: Seq[Plot] = sketchesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
 
 		val plt: Drawable = Overlay(allPlots:_*) //Overlay(h, s)
 			.xAxis()
 			.yAxis()
+			.title(titleName.getOrElse(""))
 			.standard() //.frame()
 			.xLabel("x")
-			.yLabel("y").render()
+			.yLabel("y").render()//.frame().render()
 		/*.overlayLegend(x=0.8).*/
 
 		displayPlot(plt)
 	}
-
-
 
 
 
@@ -230,7 +231,8 @@ object PlotHistAndSpline {
 	 * @param kernelNonParamMix the estimated kernel density mixture object from data (non-parametric)
 	 */
 	def plotMixtureDist(sampleData: Array[Double], canonicalMixture: Mixture, estimatedMixture: Mixture,
-					kernelMixture: KernelDensity) = {
+					kernelMixture: KernelDensity,
+					titleName: Option[String] = None): Unit = {
 
 		// generate data from canonical mixture:
 		val NUM_POINTS: Int = 2000
@@ -276,6 +278,7 @@ object PlotHistAndSpline {
 		displayPlot(Overlay((histPlot +: densityPlots): _*)
 			.standard()
 			.overlayLegend()
+			.title(titleName.getOrElse(""))
 			.xbounds(xMIN, xMAX) // args for the function
 			.render()
 		)

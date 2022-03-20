@@ -40,7 +40,7 @@ object Example_SuddenConceptDrift extends App {
 	// TODO graph the moving hists with splines
 	println(datas.length)
 	println(idxSketches.length)
-	plotMovingHistsWithSpline(idxSketches.unzip._2, HOW_MANY = 10)
+	plotHistSplineFromSketches(idxSketches.unzip._2, HOW_MANY = 10)
 
 
 	// TODO graph these measures as boxplots

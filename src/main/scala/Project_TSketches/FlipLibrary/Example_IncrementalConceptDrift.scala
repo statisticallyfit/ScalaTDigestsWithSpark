@@ -23,7 +23,28 @@ import com.cibo.evilplot.plot.renderers.BarRenderer
 
 import util.graph.PlotHistAndSpline._
 
+import scala.language.implicitConversions
 
+
+object temp_EnhanceFlipSketchUpdate {
+	implicit class MyMultipleUpdate[A](sketch: Sketch[A]) {
+
+		// Taking the Flip library definition but altering to pass in multiple as' at the same time
+		// GOAL: the Flip library's `updateTrace` just maps one A -> Sketch[A} but this function will map List[A]
+		// -> Sketch[A]
+		def updateWithMany(aas: List[List[A]]): List[Sketch[A]] = {
+
+			var temp: Sketch[A] = sketch
+			aas.map { (as: List[A]) =>
+				temp = temp.update(as:_*); temp
+			}
+			// Passing to this definition in the Flip code:
+			/*def update(as: A*): Sketch[A] =
+				Sketch.update(sketch, as.toList.map(a => (a, 1d)))*/
+		}
+	}
+}
+import temp_EnhanceFlipSketchUpdate._
 
 
 object Example_IncrementalConceptDrift extends App {
@@ -36,31 +57,34 @@ object Example_IncrementalConceptDrift extends App {
 	val draftStartingPoint = 0.0
 	val velocity = 0.01
 
+
+	val SAMPLE_NUM_FOR_TIME_DIST = 1000
+
 	/**
 	 * Concept drift component #1 =
 	 * -- Passes a center value and then if past a certain point, reverts back to  earlier values (cycling through
 	 * means so that the distributions add up cyclically (?). Otherwise, makes the center as function of velocity
 	 * and distance from a given point (draftStart)
  	 */
-	def center(idx: Int) =
+	def center(idx: Int): Double =
 		if (draftStart > idx) draftStartingPoint
 		else draftStartingPoint + velocity * (idx - draftStart)
+
 	def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
+
 	// Creating list of samples from underlying distribution, length = dataNo = 1000 - taking one sample point from
 	// the dist
-	val datas: List[Double] = (0 to dataNo).toList.map(idx => underlying(idx).sample._2)
-
+	val oneSampleDatas: List[Double] = (0 to dataNo).toList.map(idx => underlying(idx).sample._2)
+	val multiSampleDatas: List[List[Double]] =
+		(0 to dataNo).toList.map(idx => underlying(idx).samples(SAMPLE_NUM_FOR_TIME_DIST)._2)
 
 
 	// TODO ATTEMPT: graphing the time  - with - dist-sketch ---------------------------------------------------------------
 
-	val SAMPLE_NUM_FOR_TIME_DIST = 1000
 
-	val distTimePairs: List[(Int, List[Double])] = (0 to dataNo).toList.map(time =>
-		(time, underlying(time).samples(SAMPLE_NUM_FOR_TIME_DIST)._2 )
-	) // take a dist-worthy sample
+	val distTimePairs: Seq[(Int, List[Double])] = multiSampleDatas.indices.zip(multiSampleDatas)
 
-	plotMovingTimeDataWithSpline(distTimePairs, HOW_MANY = 20)
+	//plotMovingTimeDataWithSpline(distTimePairs, HOW_MANY = 20)
 
 
 	// ----------------------------------------------------------------------------------------------------------------
@@ -69,24 +93,37 @@ object Example_IncrementalConceptDrift extends App {
 		cmapStart = Some(-40.0),
 		cmapEnd = Some(40.0) // NOTE changed here from (-20, 20) --- what does this do?
 	)
-	val sketch0 = Sketch.empty[Double]
+	val sketch0: Sketch[Double] = Sketch.empty[Double]
 
-	// TODO test what happens when you change .sample(1) to .sample(500)
-	val sketchTraces: List[Sketch[Double]] = sketch0 :: sketch0.updateTrace(datas)
+	// TESTING what happens when sketch is made from sample(1)
+	val sketchFromOneData: List[Sketch[Double]] = sketch0 :: sketch0.updateTrace(oneSampleDatas)
 
-	val timeSketches: List[(Int, Sketch[Double])] = sketchTraces.indices.zip(sketchTraces)
+	val timeSketchesFromOneDataEveryTenth: List[(Int, Sketch[Double])] = sketchFromOneData.indices.zip(sketchFromOneData)
 		.toList.filter { case (idx, _) => idx % 10 == 0 }
 	// so dataNo (1000) / 10 = 100 elements left
 
-
-	// NOTE: print the data length
-	println(datas.length)
-	println(timeSketches.length)
+	// Printing the datas length
+	println(s"oneSampleDatas.length = ${oneSampleDatas.length}")
+	println(s"timeSketchesFromOneDataEveryTenth.length = ${timeSketchesFromOneDataEveryTenth.length}")
 
 	// NOTE: Indeed the x-axis represents time because the `updateTrace` from Flip returns one sketch per sampled
 	//  value that corresponds to the time (index) it was mapped to, so then you can say that sketch corresponds to that
 	//  time  (index).
-	plotMovingHistsWithSpline(timeSketches.unzip._2)
+	plotHistSplineFromSketches(timeSketchesFromOneDataEveryTenth.unzip._2,
+		titleName = Some("Sketches from sample size = 1"))
+
+
+
+
+	// TESTING: what happens when sketch is made from a larger sample than just 1
+	val sketchFromMultiData: List[Sketch[Double]] = sketch0 :: sketch0.updateWithMany(multiSampleDatas)
+
+	val timeSketchesFromMultiDataEveryTenth: List[(Int, Sketch[Double])] =
+		sketchFromMultiData.indices.zip(sketchFromMultiData)
+			.filter { case (time, _) => time % 10 == 0}.toList
+
+	plotHistSplineFromSketches(timeSketchesFromMultiDataEveryTenth.unzip._2,
+		titleName = Some(s"Sketches from Sample size = $SAMPLE_NUM_FOR_TIME_DIST"))
 
 
 
