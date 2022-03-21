@@ -26,7 +26,7 @@ import util.graph.PlotHistAndSpline._
 /**
  *
  */
-object try_Isarn_AddChangingGammas_SMALL extends App {
+object try_IsarnSketch_SmileMixtureFit_AddChangingGammas_SMALL extends App {
 
 	/**
 	 * PARAMETRIC CASE:
@@ -47,10 +47,10 @@ object try_Isarn_AddChangingGammas_SMALL extends App {
 	val orangeGamma = GammaDist(a4, b4)
 	val blueGamma = GammaDist(a5, b5)
 
-	val gammasMovingRight: Seq[GammaDist] = List(greenGamma, redGamma, purpleGamma, orangeGamma, blueGamma)
+	val gammasIncrementalMove: Seq[GammaDist] = List(greenGamma, redGamma, purpleGamma, orangeGamma, blueGamma)
 
 	// TODO: changed sample size here so total is smaller, not 40,000
-	val gammaDatas: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(1000)) //was 500 working
+	val gammaDatas: Seq[Array[Double]] = gammasIncrementalMove.map(gdist => gdist.sample(1000)) //was 500 working
 	val firstTD: TDigest = TDigest.sketch(gammaDatas.head, maxDiscrete = MAX_DISCRETE)
 
 

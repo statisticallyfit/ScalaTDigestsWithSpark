@@ -10,14 +10,11 @@ import com.cibo.evilplot.geometry.Drawable
 import com.cibo.evilplot.numeric.Bounds
 import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
-import com.cibo.evilplot.plot.renderers.BarRenderer
-
+import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer}
 import com.manyangled.snowball.analysis.interpolation.MonotonicSplineInterpolator
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
-
 import flip.implicits._
 import flip.pdf.Sketch
-
 import smile.stat.distribution.{KernelDensity, Mixture}
 /**
  *
@@ -43,7 +40,8 @@ object PlotHistAndSpline {
 		val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
 		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }
 		val (xmin, xmax) = (sampleData.min, sampleData.max)
-		println(xmin, xmax)
+		println(s"From getSketchSpline: printing (xmin, xmax) = ($xmin, $xmax)")
+
 		// TODO weird error xMin must be less than xMax ...??
 		//(xdata.min, xdata.max)
 
@@ -139,9 +137,16 @@ object PlotHistAndSpline {
 
 	def plotHistSplineFromTimeData(timeData: Seq[(Int, Seq[Double])],
 							 titleName: Option[String] = None,
-							 HOW_MANY: Int = 10): Any = {
+							 HOW_MANY: Option[Int] = Some(10)): Any = {
+
 		// Select just few for plotting (max 5 for now)
-		val howManyToShow: Int = HOW_MANY
+		val howManyToShow: Int = HOW_MANY.isDefined match {
+			case false => timeData.length
+			case true => timeData.length < HOW_MANY.get match {
+				case true => timeData.length
+				case false => HOW_MANY.get
+			}
+		}
 		val step: Int = scala.math.ceil(timeData.length * 1.0 / howManyToShow).toInt
 		val shorterIndexedSamples = timeData.filter{ case (idx, _) => idx % step == 0}
 
@@ -177,7 +182,7 @@ object PlotHistAndSpline {
 
 	def plotHistSplineFromData(datas: Seq[Seq[Double]],
 						  titleName: Option[String] = None,
-						  HOW_MANY: Int = 10): Any = {
+						  HOW_MANY: Option[Int] = Some(10)): Any = {
 
 		val indexedSamples: Seq[(Int, Seq[Double])] = datas.indices.zip(datas)
 
@@ -186,21 +191,34 @@ object PlotHistAndSpline {
 
 	def plotHistSplineFromSketches(sketches: Seq[Sketch[Double]],
 							 titleName: Option[String] = None,
-							 HOW_MANY: Int = 5): Any = {
+							 HOW_MANY: Option[Int] = Some(5),
+							 givenColorSeq: Option[Seq[Color]] = None): Any = {
+
 		// Create indexed list of sketches
 		val indexedSketches: Seq[(Int, Sketch[Double])] = sketches.indices.zip(sketches)
 
 		// Select just few for plotting (max 5 for now)
-		val howManyToShow: Int = HOW_MANY
+		val howManyToShow: Int = HOW_MANY.isDefined match {
+			case false => indexedSketches.length
+			case true => indexedSketches.length <= HOW_MANY.get match {
+				case true => indexedSketches.length
+				case false => HOW_MANY.get
+			}
+		}
+
 		val step: Int = scala.math.ceil(indexedSketches.length * 1.0 / howManyToShow).toInt
 		val shorterIndexedSketches = indexedSketches.filter{ case (idx, _) => idx % step == 0}
+		println(s"step = $step, lengthshortersketches.length = ${shorterIndexedSketches.length}")
 
-		val colorSeq: Seq[Color] = Color.getGradientSeq(shorterIndexedSketches.length)
+		val colorSeq: Seq[Color] = givenColorSeq.isDefined match {
+			case false => Color.getGradientSeq(shorterIndexedSketches.length)
+			case true => givenColorSeq.get
+		}
 
 		// Get samples each sketch in order to create the splines / hists
 		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
 			.zip(colorSeq)
-			.drop(1) // to avoid the xmin not < xmax error
+			//.drop(1) // to avoid the xmin not < xmax error NOTE have to do this BEFORE passing function arg
 			.map{ case ((idx, skt), color) =>
 				(idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color))
 			}
@@ -217,6 +235,24 @@ object PlotHistAndSpline {
 		/*.overlayLegend(x=0.8).*/
 
 		displayPlot(plt)
+
+		// TODO have label + linestyle dashed for sketch + solid line for original gammas
+		/*val plot1 = FunctionPlot.series(
+			function = mixtureFunc,
+			numPoints = Some(NUM_POINTS), // to be bigger than default of 800
+			xbounds = Some(Bounds(xMIN, xMAX)),
+			name = labelFunc,
+			color = color
+		)
+		plot1*/
+		/*FunctionPlot(
+			function = mixtureFunc,
+			xbounds = Some(Bounds(xMIN, xMAX)),
+			numPoints = Some(NUM_POINTS), // to be > than fdefault of 800
+			//TODO how to pass linestyle?
+			pathRenderer = Some(PathRenderer.default()) // dashed style
+		).overlay(plot1)*/
+
 	}
 
 
@@ -266,13 +302,22 @@ object PlotHistAndSpline {
 
 		val densityPlots: Seq[Plot] = //Overlay(
 			colors.zip(funcs).zip(funcLabels).map { case ((color, mixtureFunc), labelFunc) =>
-				FunctionPlot.series(
+				val plot1 = FunctionPlot.series(
 					function = mixtureFunc,
 					numPoints = Some(NUM_POINTS), // to be bigger than default of 800
 					xbounds = Some(Bounds(xMIN, xMAX)),
 					name = labelFunc,
 					color = color
 				)
+				plot1
+				/*FunctionPlot(
+					function = mixtureFunc,
+					xbounds = Some(Bounds(xMIN, xMAX)),
+					numPoints = Some(NUM_POINTS), // to be > than fdefault of 800
+					//TODO how to pass linestyle?
+					pathRenderer = Some(PathRenderer.default()) // dashed style
+				).overlay(plot1)*/
+
 			}
 
 		displayPlot(Overlay((histPlot +: densityPlots): _*)

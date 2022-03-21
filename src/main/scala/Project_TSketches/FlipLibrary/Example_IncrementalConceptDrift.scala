@@ -4,47 +4,17 @@ package Project_TSketches.FlipLibrary
 import flip.implicits._
 import flip.pdf.Sketch
 
-import com.cibo.evilplot._
-import com.cibo.evilplot.colors.Color
-import com.cibo.evilplot.geometry.Drawable
-import com.cibo.evilplot.numeric.Bounds
-import com.cibo.evilplot.plot._
-import com.cibo.evilplot.numeric._ // Point
-import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
-import com.cibo.evilplot.plot.renderers.BarRenderer
+import util.graph.PlotHistAndSpline._
 
+import scala.language.implicitConversions
 
+import util.EnhanceFlipSketchUpdate._
 
 //import org.isarnproject.sketches.TDigest
 
 /**
  *
  */
-
-import util.graph.PlotHistAndSpline._
-
-import scala.language.implicitConversions
-
-
-object temp_EnhanceFlipSketchUpdate {
-	implicit class MyMultipleUpdate[A](sketch: Sketch[A]) {
-
-		// Taking the Flip library definition but altering to pass in multiple as' at the same time
-		// GOAL: the Flip library's `updateTrace` just maps one A -> Sketch[A} but this function will map List[A]
-		// -> Sketch[A]
-		def updateWithMany(aas: List[List[A]]): List[Sketch[A]] = {
-
-			var temp: Sketch[A] = sketch
-			aas.map { (as: List[A]) =>
-				temp = temp.update(as:_*); temp
-			}
-			// Passing to this definition in the Flip code:
-			/*def update(as: A*): Sketch[A] =
-				Sketch.update(sketch, as.toList.map(a => (a, 1d)))*/
-		}
-	}
-}
-import temp_EnhanceFlipSketchUpdate._
 
 
 object Example_IncrementalConceptDrift extends App {
@@ -109,7 +79,9 @@ object Example_IncrementalConceptDrift extends App {
 	// NOTE: Indeed the x-axis represents time because the `updateTrace` from Flip returns one sketch per sampled
 	//  value that corresponds to the time (index) it was mapped to, so then you can say that sketch corresponds to that
 	//  time  (index).
-	plotHistSplineFromSketches(timeSketchesFromOneDataEveryTenth.unzip._2,
+
+	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
+	plotHistSplineFromSketches(timeSketchesFromOneDataEveryTenth.unzip._2.drop(1),
 		titleName = Some("Sketches from sample size = 1"))
 
 
@@ -122,7 +94,8 @@ object Example_IncrementalConceptDrift extends App {
 		sketchFromMultiData.indices.zip(sketchFromMultiData)
 			.filter { case (time, _) => time % 10 == 0}.toList
 
-	plotHistSplineFromSketches(timeSketchesFromMultiDataEveryTenth.unzip._2,
+	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
+	plotHistSplineFromSketches(timeSketchesFromMultiDataEveryTenth.unzip._2.drop(1),
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_NUM_FOR_TIME_DIST"))
 
 
