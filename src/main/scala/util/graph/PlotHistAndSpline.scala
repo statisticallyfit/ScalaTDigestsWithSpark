@@ -4,13 +4,12 @@ package util.graph
 
 // Plotting imports
 import com.cibo.evilplot._
-import com.cibo.evilplot.colors.Color
-import com.cibo.evilplot.colors.HTMLNamedColors
-import com.cibo.evilplot.geometry.Drawable
-import com.cibo.evilplot.numeric.Bounds
+import com.cibo.evilplot.colors.{CategoricalColoring, Color, Coloring, GradientMode, HTMLNamedColors}
+import com.cibo.evilplot.geometry.{Drawable, EmptyDrawable, LineStyle, Text}
+import com.cibo.evilplot.numeric.{Bounds, Point}
 import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
-import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer}
+import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRenderer}
 import com.manyangled.snowball.analysis.interpolation.MonotonicSplineInterpolator
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 import flip.implicits._
@@ -31,7 +30,9 @@ object PlotHistAndSpline {
 	// def plotFitOverSketch
 
 	// Show the spline from a sketch (no histogram, just simple spline)
-	def getSketchSpline(sketch: Sketch[Double], splineColor: Color): Plot = {
+	def getSketchSpline(sketch: Sketch[Double], splineColor: Color,
+					dotted: Boolean = false,
+					label: Option[String] = None): Plot = {
 
 		// Logic to create the pdf spline (from Erik Erlandson)
 		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
@@ -65,23 +66,87 @@ object PlotHistAndSpline {
 		val cdfspline: PolynomialSplineFunction = interpolator.interpolate(xdata, ydata)
 		val pdfspline: PolynomialSplineFunction = cdfspline.polynomialSplineDerivative()
 
-
 		val makePDFSpline: Double => Double = x => x match {
 			case x if (x < xmin) => 0.0
 			case x if (x >= xmax) => 0.0
 			case x => pdfspline.value(x)
 		}
 
-		val splineplot: Plot = FunctionPlot.series(
+		// HELP scatter method works but no red appears just gray dots, and still spaced out too far so must find
+		//  other way to do line dash
+		// Scatterplot attempt = Making dotted line if given the signal, using a scatterplot because the linedash way
+		// doesn't appear! =
+		// https://hyp.is/53ygiqoyEeymVM9C9LZ8Fg/cibotech.github.io/evilplot/colors.html
+		/*import breeze.linalg.linspace
+
+		val splineData: List[Point] = linspace(xmin, xmax, length = 100)
+			.map(x => Point(x, makePDFSpline(x)))
+			.toScalaVector
+			.toList
+
+		val gradient: Coloring[Double] = CategoricalColoring.gradient(HTMLNamedColors.gray, HTMLNamedColors.red)
+		val renderer = PointRenderer.colorByCategory(data = splineData, categoryExtract = (p: Point) => p.x % 2, coloring = Some
+		(gradient))
+		val newScatter = ScatterPlot(splineData, pointRenderer = Some(renderer))*/
+			/*.frame().xAxis().yAxis().xGrid().yGrid()
+			.xbounds(xmin, xmax)//.ybounds(0, 100)
+			.rightLegend()*/
+		// NOTE: old scatterplot, points too distanced at peaks
+		/*ScatterPlot(
+			//TODO how much is too big? how many points to use?
+			data = splineData,
+			pointRenderer = Some(PointRenderer.default(
+				color = Some(splineColor),	label = Text(msg = label.getOrElse("NO LABEL (spline)")))
+			).asInstanceOf[Option[PointRenderer[Point]]]
+		)*/
+
+		// NOTE - scatterplot not idea because of the wide spacing between dots at peaks of the distribution, and
+		//  no spacing at all at the rest of the distribution tail (looks like a line not dot)
+		/*ScatterPlot(
+			//TODO how much is too big? how many points to use?
+			data = splineData,
+			pointRenderer = Some(PointRenderer.default(
+				color = Some(splineColor),
+				label = Text(msg = label.getOrElse("NO LABEL (spline)")))
+			).asInstanceOf[Option[PointRenderer[Point]]]
+		)*/
+		val splineplot: Plot = dotted match {
+
+			case true => FunctionPlot(
+				function = (x:Double) => makePDFSpline(x),
+				pathRenderer = Some(PathRenderer.default(
+					color = Some(splineColor),
+					label = Text(msg = label.getOrElse("NO LABEL (spline)")),
+					strokeWidth = Some(5.0),
+					lineStyle = if(dotted) Some(LineStyle.Dashed) else None //if(dotted) Some(LineStyle(dashPattern = Seq(2.0))) else None )
+				)),
+				xbounds = Some(Bounds(xmin, xmax))
+			)
+			case false => FunctionPlot.series(
+				function = (x:Double) => makePDFSpline(x),
+				xbounds = Some(Bounds(xmin, xmax)),
+				name = label.getOrElse("NO LABEL (spline)"),
+				color = splineColor //HTMLNamedColors.darkMagenta,
+			)
+		}
+		/*.overlay(FunctionPlot(
 			function = (x:Double) => makePDFSpline(x),
-			name = "spline-cdf-gradient",
-			color = splineColor, //HTMLNamedColors.darkMagenta,
-			xbounds = Some(Bounds(xmin, xmax))
+			pathRenderer = Some(PathRenderer.default(lineStyle = Some(defaultTheme.elements
+			.lineDashStyle)))))*/
+		/*val plot1 = FunctionPlot.series(
+			function = mixtureFunc,
+			numPoints = Some(NUM_POINTS), // to be bigger than default of 800
+			xbounds = Some(Bounds(xMIN, xMAX)),
+			name = labelFunc,
+			color = color
 		)
+		plot1*/
 		splineplot
 	}
 
-	def getSpline(sampleData: Seq[Double], splineColor: Color): Plot = {
+	def getSpline(sampleData: Seq[Double], splineColor: Color,
+			    dotted: Boolean = false,
+			    label: Option[String] = None): Plot	= {
 
 		// NOTE: need to generate a sketch here in order to calculaet from the inverse cdf, the xdata
 		val emptySketch = Sketch.empty[Double]
@@ -89,14 +154,15 @@ object PlotHistAndSpline {
 			case (sketch, sampleValue) => sketch.update(sampleValue)
 		}
 
-		getSketchSpline(sketch, splineColor)
+		getSketchSpline(sketch, splineColor, dotted, label)
 	}
 
-	def getHist(data: Seq[Double], histColor: Color): Plot = {
+	def getHist(data: Seq[Double], histColor: Color, label: Option[String] = None): Plot = {
 
 		val makeHist: Seq[Double] => Plot = data => Histogram(
 			data,
 			//barRenderer = Some(BarRenderer.default(Some(HTMLNamedColors.blueViolet.copy(opacity = 0.25)))),
+			name = label, // TODO why doesn't this how up?
 			barRenderer = Some(BarRenderer.default(color = Some(histColor.opacity(0.25)))),
 			binningFunction = Histogram.density,
 			xbounds = Some(Bounds(data.min, data.max)) // find the xbounds
@@ -106,21 +172,24 @@ object PlotHistAndSpline {
 	}
 
 	// plot histogram from the sketch (one single one)
-	def getSketchHist(sketch: Sketch[Double], histColor: Color): Plot = {
+	def getSketchHist(sketch: Sketch[Double], histColor: Color, label: Option[String] = None): Plot = {
 
 		// Create the sample data from the sketch for the histogram
 		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
 
-		getHist(rawData, histColor)
+		getHist(rawData, histColor, label)
 	}
 
 
 	def plotHistSplineFromOneSketch(sketch: Sketch[Double],
 							  histSplineColor: Color,
-							  titleName: Option[String] = None): Any = {
+							  titleName: Option[String] = None,
+							  dotted: Boolean = false,
+							  label: Option[String] = None): Any = {
 
-		val histPlot: Plot = getSketchHist(sketch, histSplineColor)
-		val splinePlot: Plot = getSketchSpline(sketch, histSplineColor)
+		val histPlot: Plot = getSketchHist(sketch, histSplineColor, label) // prefer label on hist, since can be
+		// many lines similar to spline
+		val splinePlot: Plot = getSketchSpline(sketch, histSplineColor, dotted)
 
 		// overlay (combine the plots)
 		val overlayPlot = Overlay(histPlot, splinePlot)
@@ -128,16 +197,19 @@ object PlotHistAndSpline {
 			.yAxis()
 			.title(titleName.getOrElse(""))
 			.standard() //.frame()
+			.overlayLegend() // for name labels to appear
 			.xLabel("x")
 			.yLabel("y")
-			/*.overlayLegend(x = 0.8)*/.render()
+			.render()
 
 		displayPlot(overlayPlot)
 	}
 
 	def plotHistSplineFromTimeData(timeData: Seq[(Int, Seq[Double])],
 							 titleName: Option[String] = None,
-							 HOW_MANY: Option[Int] = Some(10)): Any = {
+							 HOW_MANY: Option[Int] = Some(10),
+							 dotted: Boolean = false,
+							 label: Option[String] = None): Any = {
 
 		// Select just few for plotting (max 5 for now)
 		val howManyToShow: Int = HOW_MANY.isDefined match {
@@ -158,7 +230,7 @@ object PlotHistAndSpline {
 		val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
 			.drop(1) // to avoid the xmin not < xmax error
 			.map{ case (idx, samp) =>
-				(idx, samp, getHist(samp, BLACK), getSpline(samp, BLACK))
+				(idx, samp, getHist(samp, BLACK, label), getSpline(samp, BLACK, dotted))
 			}
 		/*val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
 			.zip(colorSeq)
@@ -172,6 +244,7 @@ object PlotHistAndSpline {
 			.yAxis()
 			.title(titleName.getOrElse(""))
 			.standard() //.frame()
+			.overlayLegend() // for name labels to appear
 			.xLabel("x")
 			.yLabel("y").render()
 		/*.overlayLegend(x=0.8).*/
@@ -182,20 +255,36 @@ object PlotHistAndSpline {
 
 	def plotHistSplineFromData(datas: Seq[Seq[Double]],
 						  titleName: Option[String] = None,
-						  HOW_MANY: Option[Int] = Some(10)): Any = {
+						  HOW_MANY: Option[Int] = Some(10),
+						  dotted: Boolean = false, //TODO move the non-option arg to be before all the other
+						  // option-args
+						  label: Option[String] = None): Any = {
 
 		val indexedSamples: Seq[(Int, Seq[Double])] = datas.indices.zip(datas)
 
-		plotHistSplineFromTimeData(indexedSamples, titleName, HOW_MANY)
+		plotHistSplineFromTimeData(indexedSamples, titleName, HOW_MANY, dotted, label)
 	}
+
+
+
+
+
+
+
 
 	def plotHistSplineFromSketches(sketches: Seq[Sketch[Double]],
 							 titleName: Option[String] = None,
 							 HOW_MANY: Option[Int] = Some(5),
-							 givenColorSeq: Option[Seq[Color]] = None): Any = {
+							 givenColorSeq: Option[Seq[Color]] = None,
+							 graphToColorLabels: Option[Seq[String]] = None,
+							 dotted: Boolean = false): Any = {
 
 		// Create indexed list of sketches
 		val indexedSketches: Seq[(Int, Sketch[Double])] = sketches.indices.zip(sketches)
+
+		// Get xbounds
+		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE_FROM_SKETCH)._2)
+		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
 
 		// Select just few for plotting (max 5 for now)
 		val howManyToShow: Int = HOW_MANY.isDefined match {
@@ -208,6 +297,7 @@ object PlotHistAndSpline {
 
 		val step: Int = scala.math.ceil(indexedSketches.length * 1.0 / howManyToShow).toInt
 		val shorterIndexedSketches = indexedSketches.filter{ case (idx, _) => idx % step == 0}
+
 		println(s"step = $step, lengthshortersketches.length = ${shorterIndexedSketches.length}")
 
 		val colorSeq: Seq[Color] = givenColorSeq.isDefined match {
@@ -215,21 +305,43 @@ object PlotHistAndSpline {
 			case true => givenColorSeq.get
 		}
 
+		assert(colorSeq.length == howManyToShow, "ERROR: lengths of colors must equal length of sketches and " +
+			"number to show")
+		assert(howManyToShow == shorterIndexedSketches.length, "ERROR: length of colors must equal length of " +
+			"sketches")
+
 		// Get samples each sketch in order to create the splines / hists
-		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = shorterIndexedSketches
-			.zip(colorSeq)
-			//.drop(1) // to avoid the xmin not < xmax error NOTE have to do this BEFORE passing function arg
-			.map{ case ((idx, skt), color) =>
-				(idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color))
-			}
+		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = graphToColorLabels.isDefined match {
+			case true => shorterIndexedSketches
+				.zip(colorSeq)
+				.zip(graphToColorLabels.get)
+				//.drop(1) // to avoid the xmin not < xmax error NOTE have to do this BEFORE passing function arg
+				.map{ case (((idx, skt), color), label) =>
+					//(idx, skt, getSketchHist(skt, color, Some(label)), getSketchSpline(skt, color, dotted))
+					// TODO figure out how to get label from the histogram ???
+					(idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color, dotted, Some(label)))
+				}
+			case false => shorterIndexedSketches.zip(colorSeq)
+				//.drop(1) // to avoid the xmin not < xmax error NOTE have to do this BEFORE passing function arg
+				.map{ case ((idx, skt), color) =>
+					(idx, skt, getSketchHist(skt, color), getSketchSpline(skt, color, dotted))
+				}
+		}
 
 		val allPlots: Seq[Plot] = sketchesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
+		val plots: Seq[(Plot, Plot)] = sketchesWithPlots.map{ case (_, _, hist, spline) => (hist, spline )}
+		val (hists, splines): (Seq[Plot], Seq[Plot]) = (plots.unzip._1, plots.unzip._2)
 
-		val plt: Drawable = Overlay(allPlots:_*) //Overlay(h, s)
+		// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter
+		val plt: Drawable = Overlay(allPlots:_*)
+			/* Overlay(splines:_*).topLegend(labels = graphToColorLabels)
+			.overlay(hists:_*)*/
 			.xAxis()
 			.yAxis()
+			.xbounds(lower = xMIN, upper = xMAX)
 			.title(titleName.getOrElse(""))
 			.standard() //.frame()
+			.overlayLegend() // for name labels to appear
 			.xLabel("x")
 			.yLabel("y").render()//.frame().render()
 		/*.overlayLegend(x=0.8).*/
@@ -252,7 +364,6 @@ object PlotHistAndSpline {
 			//TODO how to pass linestyle?
 			pathRenderer = Some(PathRenderer.default()) // dashed style
 		).overlay(plot1)*/
-
 	}
 
 
@@ -302,27 +413,18 @@ object PlotHistAndSpline {
 
 		val densityPlots: Seq[Plot] = //Overlay(
 			colors.zip(funcs).zip(funcLabels).map { case ((color, mixtureFunc), labelFunc) =>
-				val plot1 = FunctionPlot.series(
+				FunctionPlot.series(
 					function = mixtureFunc,
 					numPoints = Some(NUM_POINTS), // to be bigger than default of 800
 					xbounds = Some(Bounds(xMIN, xMAX)),
 					name = labelFunc,
 					color = color
 				)
-				plot1
-				/*FunctionPlot(
-					function = mixtureFunc,
-					xbounds = Some(Bounds(xMIN, xMAX)),
-					numPoints = Some(NUM_POINTS), // to be > than fdefault of 800
-					//TODO how to pass linestyle?
-					pathRenderer = Some(PathRenderer.default()) // dashed style
-				).overlay(plot1)*/
-
 			}
 
 		displayPlot(Overlay((histPlot +: densityPlots): _*)
 			.standard()
-			.overlayLegend()
+			.overlayLegend() // for name labels to appear
 			.title(titleName.getOrElse(""))
 			.xbounds(xMIN, xMAX) // args for the function
 			.render()

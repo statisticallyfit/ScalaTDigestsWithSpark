@@ -92,7 +92,9 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	plotHistSplineFromSketches(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
-			.orange, HTMLNamedColors.blue)))
+			.orange, HTMLNamedColors.blue)),
+		graphToColorLabels = Some(List("green gamma", "red gamma", "purple gamma", "orange gamma", "blue gamma")),
+		dotted = true)
 	//val c: Color = HTMLNamedColors.red
 
 
