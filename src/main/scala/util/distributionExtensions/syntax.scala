@@ -10,7 +10,7 @@ object syntax {
 	// TODO try to make all the types work with syntax -- DiscrDist[D] as well as Dist[T, D] -- why not working?
 	//  Need to put P[_,_] kind of thing?
 
-	implicit class CDFSyntax[T: Numeric, D](distTD: Dist[T, D])(implicit ev: CDF[T, Dist[T, D]]){
+	implicit class CDFSyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: CDF[T, Distr[T, D]]){
 
 		def cdf(x: T): Double = ev.cumProb(distTD, x)
 
@@ -38,11 +38,15 @@ object syntax {
 		def inverseCdf(p: Double): Real = ev.invCumProb(distTD, p)
 	}
 
-	implicit class SamplingSyntax[T: Numeric, D](distTD: Dist[T, D])(implicit ev: Sampling[T, Dist[T, D]]){
+	implicit class SamplingSyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: Sampling[T, Distr[T, D]]){
 
 		def sample(n: Int): Seq[T] = ev.sampleDist(distTD, n)
 		def sample: T = ev.sampleDist(distTD, 1).head
 
 	}
 
+	implicit class ProbabilitySyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: ProbabilityFunction[T, D]){
+		// PMF if T is discrete (int) or PDF if T is continuous (double real)
+		def probabilityFunction(x: T): Double = ev.prob(distTD.getDist, x)
+	}
 }

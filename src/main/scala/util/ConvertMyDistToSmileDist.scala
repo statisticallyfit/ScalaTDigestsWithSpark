@@ -15,7 +15,7 @@ object ConvertMyDistToSmileDist {
 
 
 	// NOTE: using 'getdeclaredfields' works for my dist[T, D] construction, have to use 'getfields' for the smile dist
-	def getDistParams[T: Numeric, D](dist: Dist[T, D]): Map[String, (AnyRef, String)] = {
+	def getDistParams[T: Numeric, D](dist: Distr[T, D]): Map[String, (AnyRef, String)] = {
 
 		dist.getDist.getClass.getDeclaredFields.toList
 			.map(f => {
@@ -51,7 +51,7 @@ object ConvertMyDistToSmileDist {
 	import scala.language.higherKinds
 	import scala.language.implicitConversions
 
-	implicit class ToSmileDist[T: Numeric, D](distObj: Dist[T, D]) {
+	implicit class ToSmileDist[T: Numeric, D](distObj: Distr[T, D]) {
 
 		def toSmileDist[S: TypeTag]: S = {
 			import scala.reflect.runtime._
@@ -94,7 +94,7 @@ object ConvertMyDistToSmileDist {
 	// or reflectDist(BetaDist(4.5, 6.7)
 	//res30: util.distributionExtensions.distributions.BetaDist = BetaDist(4.5,6.7)
 	// NOTE: must use my types Real / IntZ not Double / Int WARNING
-	def reflectDist[T: Numeric, D](distObj: Dist[T, D]): D = {
+	def reflectDist[T: Numeric, D](distObj: Distr[T, D]): D = {
 		import scala.reflect.runtime._
 		val cm = universe.runtimeMirror(getClass.getClassLoader)
 		import scala.tools.reflect.ToolBox

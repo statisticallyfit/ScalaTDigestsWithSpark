@@ -161,8 +161,8 @@ object experiment {
 
 
 	// Kolmogorov-Smirnov D statistic
-	def kolmogorovSmirnovDStatistic[T: Numeric: TypeTag, D](td: TDigest, dist: Dist[T, D])
-												(implicit ev: CDF[T, Dist[T, D]]): Double	= {
+	def kolmogorovSmirnovDStatistic[T: Numeric: TypeTag, D](td: TDigest, dist: Distr[T, D])
+												(implicit ev: CDF[T, Distr[T, D]]): Double	= {
 
 		val xmin = td.clusters.keyMin.get
 		val xmax: Double = td.clusters.keyMax.get
@@ -179,8 +179,8 @@ object experiment {
 	}
 
 
-	def collect[T: Numeric: TypeTag, D](mon: Monoid[TDigest], dist: Dist[T, D])(implicit evCDF: CDF[T, Dist[T, D]],
-														  evSamp: Sampling[T, Dist[T, D]]) = {
+	def collect[T: Numeric: TypeTag, D](mon: Monoid[TDigest], dist: Distr[T, D])(implicit evCDF: CDF[T, Distr[T, D]],
+																  evSamp: Sampling[T, Distr[T, D]]) = {
 
 		val raw: Vector[(BrokenTDigestAdd, OrderedTDigestAdd)] = Vector.fill(SAMPLE_SIZE) {
 			val data: Vector[Vector[T]] = Vector.fill(1 + N_SUMS) { Vector.fill(DATA_SIZE) { dist.sample
@@ -222,9 +222,9 @@ object experiment {
 	 * Made by @statisticallyfit
 	 * @param dist
 	 */
-	def runExperiment[T: Numeric: TypeTag, D](dist: Dist[T, D])
-									 (implicit evCdf: CDF[T, Dist[T, D]],
-											 evSamp: Sampling[T, Dist[T, D]]): Unit = {
+	def runExperiment[T: Numeric: TypeTag, D](dist: Distr[T, D])
+									 (implicit evCdf: CDF[T, Distr[T, D]],
+									  evSamp: Sampling[T, Distr[T, D]]): Unit = {
 
 
 		val (brok, ord, ind): (Seq[Seq[Double]], Seq[Seq[Double]], Seq[Seq[Int]]) = {

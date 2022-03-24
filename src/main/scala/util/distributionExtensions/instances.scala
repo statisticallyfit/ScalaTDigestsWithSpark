@@ -8,13 +8,18 @@ object instances {
 
 	trait PoissonInstances {
 
-		implicit def poissonDistHasCDF: CDF[IntZ, Dist[IntZ, PoissonDist]] =
-			new CDF[IntZ, Dist[IntZ, PoissonDist]] {
+		implicit def poissonHasProbability: ProbabilityFunction[IntZ, PoissonDist] =
+			new ProbabilityFunction[IntZ, PoissonDist] {
+				def prob(d: PoissonDist, x: IntZ): Double = d.probability(x.intValue())
+			}
 
-			def cumProb(d: Dist[IntZ, PoissonDist], n: IntZ): Double = {
+		implicit def poissonDistHasCDF: CDF[IntZ, Distr[IntZ, PoissonDist]] =
+			new CDF[IntZ, Distr[IntZ, PoissonDist]] {
+
+			def cumProb(d: Distr[IntZ, PoissonDist], n: IntZ): Double = {
 				d.getDist.cumulativeProbability(n.intValue())
 			}
-			def invCumProb(d: Dist[IntZ, PoissonDist], p: Double): IntZ = {
+			def invCumProb(d: Distr[IntZ, PoissonDist], p: Double): IntZ = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
@@ -50,177 +55,230 @@ object instances {
 			}
 		}*/
 
-		implicit def poissonDistCanBeSampled: Sampling[IntZ, Dist[IntZ, PoissonDist]] =
-			new Sampling[IntZ, Dist[IntZ, PoissonDist]]{
+		implicit def poissonDistCanBeSampled: Sampling[IntZ, Distr[IntZ, PoissonDist]] =
+			new Sampling[IntZ, Distr[IntZ, PoissonDist]]{
 
-			def sampleDist(d: Dist[IntZ, PoissonDist], n: Int): Seq[IntZ] =
+			def sampleDist(d: Distr[IntZ, PoissonDist], n: Int): Seq[IntZ] =
 				d.getDist.sample(n.intValue()).map(BigInt(_))
 		}
 	}
 	//import PoissonInstances._
 
 	trait BinomialInstances {
-		implicit def binomialDistHCDF: CDF[IntZ, Dist[IntZ, BinomialDist]] =
-			new CDF[IntZ, Dist[IntZ, BinomialDist]] {
+		implicit def binomialHasProbability: ProbabilityFunction[IntZ, BinomialDist] =
+			new ProbabilityFunction[IntZ, BinomialDist] {
+				def prob(d: BinomialDist, x: IntZ): Double = d.probability(x.intValue())
+			}
 
-			def cumProb(d: Dist[IntZ, BinomialDist], n: IntZ): Double = {
+		implicit def binomialDistHCDF: CDF[IntZ, Distr[IntZ, BinomialDist]] =
+			new CDF[IntZ, Distr[IntZ, BinomialDist]] {
+
+			def cumProb(d: Distr[IntZ, BinomialDist], n: IntZ): Double = {
 				d.getDist.cumulativeProbability(n.intValue())
 			}
-			def invCumProb(d: Dist[IntZ, BinomialDist], p: Double): IntZ = {
+			def invCumProb(d: Distr[IntZ, BinomialDist], p: Double): IntZ = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def BinomialDistCanBeSampled: Sampling[IntZ, Dist[IntZ, BinomialDist]] =
-			new Sampling[IntZ, Dist[IntZ, BinomialDist]]{
+		implicit def BinomialDistCanBeSampled: Sampling[IntZ, Distr[IntZ, BinomialDist]] =
+			new Sampling[IntZ, Distr[IntZ, BinomialDist]]{
 
-			def sampleDist(d: Dist[IntZ, BinomialDist], n: Int): Seq[IntZ] =
+			def sampleDist(d: Distr[IntZ, BinomialDist], n: Int): Seq[IntZ] =
 				d.getDist.sample(n.intValue()).map(BigInt(_))
 		}
 	}
 
 	trait GeometricInstances {
-		implicit def geometricDistHCDF: CDF[IntZ, Dist[IntZ, GeometricDist]] =
-			new CDF[IntZ, Dist[IntZ, GeometricDist]] {
+		implicit def geometricHasProbability: ProbabilityFunction[IntZ, GeometricDist] =
+			new ProbabilityFunction[IntZ, GeometricDist] {
+				def prob(d: GeometricDist, x: IntZ): Double = d.probability(x.intValue())
+			}
 
-			def cumProb(d: Dist[IntZ, GeometricDist], n: IntZ): Double = {
+		implicit def geometricDistHCDF: CDF[IntZ, Distr[IntZ, GeometricDist]] =
+			new CDF[IntZ, Distr[IntZ, GeometricDist]] {
+
+			def cumProb(d: Distr[IntZ, GeometricDist], n: IntZ): Double = {
 				d.getDist.cumulativeProbability(n.intValue())
 			}
-			def invCumProb(d: Dist[IntZ, GeometricDist], p: Double): IntZ = {
+			def invCumProb(d: Distr[IntZ, GeometricDist], p: Double): IntZ = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
 
-		implicit def geometricDistCanBeSampled: Sampling[IntZ, Dist[IntZ, GeometricDist]] =
-			new Sampling[IntZ, Dist[IntZ, GeometricDist]]{
+		implicit def geometricDistCanBeSampled: Sampling[IntZ, Distr[IntZ, GeometricDist]] =
+			new Sampling[IntZ, Distr[IntZ, GeometricDist]]{
 
-			def sampleDist(d: Dist[IntZ, GeometricDist], n: Int): Seq[IntZ] =
+			def sampleDist(d: Distr[IntZ, GeometricDist], n: Int): Seq[IntZ] =
 				d.getDist.sample(n).map(BigInt(_))
 		}
 
 	}
 
 	trait GammaInstances {
-		implicit def gammaDistHasCDF: CDF[Real, Dist[Real, GammaDist]] =
-			new CDF[Real, Dist[Real, GammaDist]] {
+		implicit def gammaHasProbability: ProbabilityFunction[Real, GammaDist] =
+			new ProbabilityFunction[Real, GammaDist] {
+				def prob(d: GammaDist, x: Real): Double = d.density(x.doubleValue())
+					// TODO prob or density here?? d.probability(x.doubleValue())
+			}
 
-			def cumProb(d: Dist[Real, GammaDist], x: Real): Double = {
+		implicit def gammaDistHasCDF: CDF[Real, Distr[Real, GammaDist]] =
+			new CDF[Real, Distr[Real, GammaDist]] {
+
+			def cumProb(d: Distr[Real, GammaDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, GammaDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, GammaDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def gammaDistCanBeSampled: Sampling[Real, Dist[Real, GammaDist]] =
-			new Sampling[Real, Dist[Real, GammaDist]]{
+		implicit def gammaDistCanBeSampled: Sampling[Real, Distr[Real, GammaDist]] =
+			new Sampling[Real, Distr[Real, GammaDist]]{
 
-			def sampleDist(d: Dist[Real, GammaDist], n: Int): Seq[Real] =
+			def sampleDist(d: Distr[Real, GammaDist], n: Int): Seq[Real] =
 				d.getDist.sample(n).map(BigDecimal(_))
 		}
 
 	}
 
 	trait NormalInstances {
-		implicit def normalDistHasCDF: CDF[Real, Dist[Real, NormalDist]] = new CDF[Real, Dist[Real, NormalDist]] {
+		implicit def normalHasProbability: ProbabilityFunction[Real, NormalDist] =
+			new ProbabilityFunction[Real, NormalDist] {
+				def prob(d: NormalDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
 
-			def cumProb(d: Dist[Real, NormalDist], x: Real): Double = {
+		implicit def normalDistHasCDF: CDF[Real, Distr[Real, NormalDist]] = new CDF[Real, Distr[Real, NormalDist]] {
+
+			def cumProb(d: Distr[Real, NormalDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, NormalDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, NormalDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def normalDistCanBeSampled: Sampling[Real, Dist[Real, NormalDist]] =
-			new Sampling[Real, Dist[Real, NormalDist]]{
+		implicit def normalDistCanBeSampled: Sampling[Real, Distr[Real, NormalDist]] =
+			new Sampling[Real, Distr[Real, NormalDist]]{
 
-			def sampleDist(d: Dist[Real, NormalDist], n: Int): Seq[Real] =
+			def sampleDist(d: Distr[Real, NormalDist], n: Int): Seq[Real] =
 				d.getDist.sample(n).map(BigDecimal(_))
 		}
 	}
 
 	trait ContinuousUniformInstances {
-		implicit def uniformContinuousDistHasCDF: CDF[Real, Dist[Real, ContinuousUniformDist]] = new
-				CDF[Real, Dist[Real, ContinuousUniformDist]] {
-			def cumProb(d: Dist[Real, ContinuousUniformDist], x: Real): Double = {
+		implicit def uniformContinHasProbability: ProbabilityFunction[Real, ContinuousUniformDist] =
+			new ProbabilityFunction[Real, ContinuousUniformDist] {
+				def prob(d: ContinuousUniformDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
+
+		implicit def uniformContinuousDistHasCDF: CDF[Real, Distr[Real, ContinuousUniformDist]] = new
+				CDF[Real, Distr[Real, ContinuousUniformDist]] {
+			def cumProb(d: Distr[Real, ContinuousUniformDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, ContinuousUniformDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, ContinuousUniformDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def continuousUniformDistCanBeSampled: Sampling[Real, Dist[Real, ContinuousUniformDist]] =
-			new Sampling[Real, Dist[Real, ContinuousUniformDist]]{
+		implicit def continuousUniformDistCanBeSampled: Sampling[Real, Distr[Real, ContinuousUniformDist]] =
+			new Sampling[Real, Distr[Real, ContinuousUniformDist]]{
 
-			def sampleDist(d: Dist[Real, ContinuousUniformDist], n: Int): Seq[Real] =
+			def sampleDist(d: Distr[Real, ContinuousUniformDist], n: Int): Seq[Real] =
 				d.getDist.sample(n).map(BigDecimal(_))
 		}
 	}
 
 	trait GumbelInstances {
-		implicit def gumbelDistHasCDF: CDF[Real, Dist[Real, GumbelDist]] = new CDF[Real, Dist[Real,
+		implicit def gumbelHasProbability: ProbabilityFunction[Real, GumbelDist] =
+			new ProbabilityFunction[Real, GumbelDist] {
+				def prob(d: GumbelDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
+
+		implicit def gumbelDistHasCDF: CDF[Real, Distr[Real, GumbelDist]] = new CDF[Real, Distr[Real,
 			GumbelDist]] {
-			def cumProb(d: Dist[Real, GumbelDist], x: Real): Double = {
+			def cumProb(d: Distr[Real, GumbelDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, GumbelDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, GumbelDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def gumbelDistCanBeSampled: Sampling[Real, Dist[Real, GumbelDist]] = new Sampling[Real,
-			Dist[Real, GumbelDist]]{
-			def sampleDist(d: Dist[Real, GumbelDist], n: Int): Seq[Real] =
+		implicit def gumbelDistCanBeSampled: Sampling[Real, Distr[Real, GumbelDist]] = new Sampling[Real,
+			Distr[Real, GumbelDist]]{
+			def sampleDist(d: Distr[Real, GumbelDist], n: Int): Seq[Real] =
 				d.getDist.sample(n).map(BigDecimal(_))
 		}
 	}
 
 	trait ExponentialInstances {
-		implicit def exponentialDistHasCDF: CDF[Real, Dist[Real, ExponentialDist]] = new CDF[Real, Dist[Real,
+
+		implicit def exponentialHasProbability: ProbabilityFunction[Real, ExponentialDist] =
+			new ProbabilityFunction[Real, ExponentialDist] {
+				def prob(d: ExponentialDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
+
+		implicit def exponentialDistHasCDF: CDF[Real, Distr[Real, ExponentialDist]] = new CDF[Real, Distr[Real,
 			ExponentialDist]] {
-			def cumProb(d: Dist[Real, ExponentialDist], x: Real): Double = {
+			def cumProb(d: Distr[Real, ExponentialDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, ExponentialDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, ExponentialDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def exponentialDistCanBeSampled: Sampling[Real, Dist[Real, ExponentialDist]] = new Sampling[Real,
-			Dist[Real, ExponentialDist]]{
-			def sampleDist(d: Dist[Real, ExponentialDist], n: Int): Seq[Real] =
+		implicit def exponentialDistCanBeSampled: Sampling[Real, Distr[Real, ExponentialDist]] = new Sampling[Real,
+			Distr[Real, ExponentialDist]]{
+			def sampleDist(d: Distr[Real, ExponentialDist], n: Int): Seq[Real] =
 				d.getDist.sample(n).map(BigDecimal(_))
 		}
 	}
 
 	trait BetaInstances {
-		implicit def betaDistHasCDF: CDF[Real, Dist[Real, BetaDist]] = new CDF[Real, Dist[Real, BetaDist]] {
+		implicit def betaHasProbability: ProbabilityFunction[Real, BetaDist] =
+			new ProbabilityFunction[Real, BetaDist] {
+				def prob(d: BetaDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
 
-			def cumProb(d: Dist[Real, BetaDist], x: Real): Double = {
+		implicit def betaDistHasCDF: CDF[Real, Distr[Real, BetaDist]] = new CDF[Real, Distr[Real, BetaDist]] {
+
+			def cumProb(d: Distr[Real, BetaDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, BetaDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, BetaDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def betaDistCanBeSampled: Sampling[Real, Dist[Real, BetaDist]] =
-			new Sampling[Real, Dist[Real, BetaDist]]{
+		implicit def betaDistCanBeSampled: Sampling[Real, Distr[Real, BetaDist]] =
+			new Sampling[Real, Distr[Real, BetaDist]]{
 
-				def sampleDist(d: Dist[Real, BetaDist], n: Int): Seq[Real] =
+				def sampleDist(d: Distr[Real, BetaDist], n: Int): Seq[Real] =
 					d.getDist.sample(n).map(BigDecimal(_))
 			}
 	}
 
 	trait WeibullInstances {
-		implicit def weibullDistHasCDF: CDF[Real, Dist[Real, WeibullDist]] = new CDF[Real, Dist[Real, WeibullDist]] {
+		implicit def weibullHasProbability: ProbabilityFunction[Real, WeibullDist] =
+			new ProbabilityFunction[Real, WeibullDist] {
+				def prob(d: WeibullDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
 
-			def cumProb(d: Dist[Real, WeibullDist], x: Real): Double = {
+		implicit def weibullDistHasCDF: CDF[Real, Distr[Real, WeibullDist]] = new CDF[Real, Distr[Real, WeibullDist]] {
+
+			def cumProb(d: Distr[Real, WeibullDist], x: Real): Double = {
 				d.getDist.cumulativeProbability(x.doubleValue())
 			}
-			def invCumProb(d: Dist[Real, WeibullDist], p: Double): Real = {
+			def invCumProb(d: Distr[Real, WeibullDist], p: Double): Real = {
 				d.getDist.inverseCumulativeProbability(p)
 			}
 		}
-		implicit def weibullDistCanBeSampled: Sampling[Real, Dist[Real, WeibullDist]] =
-			new Sampling[Real, Dist[Real, WeibullDist]]{
+		implicit def weibullDistCanBeSampled: Sampling[Real, Distr[Real, WeibullDist]] =
+			new Sampling[Real, Distr[Real, WeibullDist]]{
 
-				def sampleDist(d: Dist[Real, WeibullDist], n: Int): Seq[Real] =
+				def sampleDist(d: Distr[Real, WeibullDist], n: Int): Seq[Real] =
 					d.getDist.sample(n).map(BigDecimal(_))
 			}
 	}
@@ -237,5 +295,4 @@ object instances {
 		with GumbelInstances
 
 	object AllInstances extends DiscreteCDFInstances with ContinuousCDFInstances
-
 }

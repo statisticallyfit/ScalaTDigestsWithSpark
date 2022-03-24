@@ -3,13 +3,18 @@ package workspace_snippets
 
 
 import com.cibo.evilplot.colors.{Color, HTMLNamedColors}
+
 import flip.implicits._
 import flip.pdf.Sketch
+
 import util.graph.PlotHistAndSpline._
 import util.EnhanceFlipSketchUpdate._
 
 import scala.language.implicitConversions
+
 import util.distributionExtensions.distributions._
+import util.distributionExtensions.instances.AllInstances._
+//import util.distributionExtensions.syntax._
 
 /**
  *
@@ -94,7 +99,7 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(List("green gamma", "red gamma", "purple gamma", "orange gamma", "blue gamma")),
-		dotted = true)
+		originalDists = Some(gammasIncrementalMove))
 	//val c: Color = HTMLNamedColors.red
 
 

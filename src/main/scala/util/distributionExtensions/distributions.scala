@@ -19,7 +19,9 @@ object distributions {
 	type IntZ = BigInt // integers
 	type Real = BigDecimal // real numbers
 
-
+	trait ProbabilityFunction[T, D] {
+		def prob(d: D, x: T): Double
+	}
 	trait CDF[T, D] {
 		//def getDistFromCDFArea(d: D): D // NOTE: this functions not necessary for the experiment of making
 		// AbsDist[T] callable with .cdf
@@ -29,15 +31,16 @@ object distributions {
 	trait Sampling[T, D] {
 		def sampleDist(d: D, n: Int): Seq[T]
 	}
-	trait Dist[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
+	trait Distr[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
 		def getDist: D
 	}
-	trait ContinuousDist[D] extends Dist[Real, D]
-	trait DiscreteDist[D] extends Dist[IntZ, D]
+	trait ContinuousDist[D] extends Distr[Real, D]
+	trait DiscreteDist[D] extends Distr[IntZ, D]
 
 
-	case class PoissonDist(lambda: Double) extends PoissonDistribution(lambda)	with DiscreteDist[PoissonDist]
-	{ def getDist: PoissonDist = this }
+	case class PoissonDist(lambda: Double) extends PoissonDistribution(lambda)	with DiscreteDist[PoissonDist] {
+		def getDist: PoissonDist = this
+	}
 	case class BinomialDist(numTrials: Int, p: Double) extends BinomialDistribution(numTrials, p)
 		with DiscreteDist[BinomialDist] { def getDist: BinomialDist = this }
 	case class GeometricDist(p: Double) extends GeometricDistribution(p)

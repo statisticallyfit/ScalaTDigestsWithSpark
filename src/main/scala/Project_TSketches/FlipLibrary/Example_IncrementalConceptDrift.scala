@@ -10,6 +10,10 @@ import scala.language.implicitConversions
 
 import util.EnhanceFlipSketchUpdate._
 
+import util.distributionExtensions.distributions._
+import util.distributionExtensions.instances.AllInstances._
+import util.distributionExtensions.syntax._
+
 //import org.isarnproject.sketches.TDigest
 
 /**

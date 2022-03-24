@@ -98,7 +98,7 @@ object TestTools  {
 
 	object StatTools {
 
-		def calcMode[T: Numeric, D](dist: Dist[T, D]): Double = {
+		def calcMode[T: Numeric, D](dist: Distr[T, D]): Double = {
 			dist.getDist match {
 				case g: GammaDist => (g.shape - 1) / g.scale
 				case g: GumbelDist => (g.mu)
@@ -125,9 +125,9 @@ object TestTools  {
 		// Does the test by samples generated from the digest and other distribution
 		// NOTE: same as isarn-sketches `testSamplingPDF` and `testSamplingPMF` = https://github.com/isarn/isarn-sketches/blob/develop/src/test/scala/org/isarnproject/sketches/TDigestTest.scala#L51-L70
 
-		def kolmogorovSmirnovSampleD[T: Numeric : TypeTag, D](tdgst: TDigest, dist: Dist[T, D])
-												   (implicit evCdf: CDF[T, Dist[T, D]],
-												    evSmp: Sampling[T, Dist[T, D]]): Double = {
+		def kolmogorovSmirnovSampleD[T: Numeric : TypeTag, D](tdgst: TDigest, dist: Distr[T, D])
+												   (implicit evCdf: CDF[T, Distr[T, D]],
+												    evSmp: Sampling[T, Distr[T, D]]): Double = {
 
 			// Sample from the t-digest sketch of this distribution
 			val tdSamples: Array[Double] = typeOf[T].toString contains "Int" match { // Int or IntZ
@@ -157,10 +157,10 @@ object TestTools  {
 
 		// Does the test by cdf
 		def kolmogorovSmirnovCdfD[T: Numeric : TypeTag, D](tdgst: TDigest,
-												 dist: Dist[T, D],
+												 dist: Distr[T, D],
 												 //testID: (Int, Char) = TEST_ID,
 												 n: Int = 10000)
-												(implicit evCdf: CDF[T, Dist[T, D]]): Double = {
+												(implicit evCdf: CDF[T, Distr[T, D]]): Double = {
 			require(tdgst.nclusters > 1) // size == num clusters //require(tdgst.size() > 1)
 			require(n > 0)
 
@@ -202,9 +202,9 @@ object TestTools  {
 			ksd
 		}
 
-		def kolmogorovSmirnovD[T: Numeric : TypeTag, D](tdgst: TDigest, dist: Dist[T, D])
-											  (implicit evCdf: CDF[T, Dist[T, D]],
-											   evSmp: Sampling[T, Dist[T, D]]): (Double, Double) = {
+		def kolmogorovSmirnovD[T: Numeric : TypeTag, D](tdgst: TDigest, dist: Distr[T, D])
+											  (implicit evCdf: CDF[T, Distr[T, D]],
+											   evSmp: Sampling[T, Distr[T, D]]): (Double, Double) = {
 
 			val ksdCdf = kolmogorovSmirnovCdfD(tdgst, dist)
 			val ksdSample = kolmogorovSmirnovSampleD(tdgst, dist)
@@ -224,9 +224,9 @@ object TestTools  {
 		// Does something similar to KSD test except doesn't use absolute value --- leaves the signs as they are in
 		//  order to see which cdf is "underneath" or "above" the other (if result < 0, then cdfA < cdfB, else if result
 		//  > 0 then cdfA > cdfB) and we can thus tell which one is "shifted" left or right, respectively
-		def cdfSignTest[T: Numeric : TypeTag, D](dist1: Dist[T, D], dist2: Dist[T, D], n: Int = 10000)
-										(implicit evCdf: CDF[T, Dist[T, D]],
-										 smpl: Sampling[T, Dist[T, D]]): Double = {
+		def cdfSignTest[T: Numeric : TypeTag, D](dist1: Distr[T, D], dist2: Distr[T, D], n: Int = 10000)
+										(implicit evCdf: CDF[T, Distr[T, D]],
+										 smpl: Sampling[T, Distr[T, D]]): Double = {
 			// TODO require(tdgst.nclusters > 1) // size == num clusters //require(tdgst.size() > 1)
 			require(n > 0)
 
