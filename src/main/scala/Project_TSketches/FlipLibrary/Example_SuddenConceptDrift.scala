@@ -42,7 +42,7 @@ object Example_SuddenConceptDrift extends App {
 	println(idxSketches.length)
 
 	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
-	plotHistSplineFromSketches(idxSketches.unzip._2.drop(1), HOW_MANY = Some(10))
+	plotSketchHistSplines(idxSketches.unzip._2.drop(1), HOW_MANY = Some(10))
 
 
 	// TODO graph these measures as boxplots

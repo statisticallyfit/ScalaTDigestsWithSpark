@@ -31,12 +31,12 @@ import scala.reflect.runtime.universe._
 
 object PlotHistAndSpline {
 
-	final val SAMPLE_SIZE_FROM_SKETCH: Int = 8000 //50000 // fifty thousand
+	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
 
 
-	// TODO major refactoring to do - change the underlying dist from Apache to Smile type in my construction
 	def getDensity[T: TypeTag, D](dist: Distr[T, D],
 							distColor: Color)(implicit evNum: Numeric[T],
+										   evSamp: Sampling[T, Distr[T, D]], // TODO change to T, D
 										   evProb: ProbabilityFunction[T, D]): Plot	= {
 
 		val makeDensity: T => Double = x => dist.probabilityFunction(x)
@@ -48,15 +48,18 @@ object PlotHistAndSpline {
 			case "Real" => BigDecimal.valueOf(xDouble).asInstanceOf[T]
 		}
 
+		// Get xbounds or else the graph won't appear!
+		val sampleDist: Seq[Double] = dist.sample(SAMPLE_SIZE).map(evNum.toDouble(_))
+		val (distXMin, distXMax): (Double, Double) = (sampleDist.min, sampleDist.max)
+
 		FunctionPlot(
 			function = (x:Double) => makeDensity(rawDoubleToT(x)),
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(distColor),
-				// TODO add label if need be
 				label = Text(msg = dist.getDist.toString),
-				strokeWidth = Some(3.0)
-			))/*,
-			xbounds = Some(Bounds(xmin, xmax))*/
+				strokeWidth = Some(5.0)
+			)),
+			xbounds = Some(Bounds(distXMin, distXMax))
 		)
 	}
 
@@ -67,7 +70,7 @@ object PlotHistAndSpline {
 					label: Option[String] = None): Plot = {
 
 		// Logic to create the pdf spline (from Erik Erlandson)
-		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
+		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE)._2
 		//val sketch: TDigest = TDigest.sketch(rawdata)
 
 		val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
@@ -149,7 +152,7 @@ object PlotHistAndSpline {
 				pathRenderer = Some(PathRenderer.default(
 					color = Some(splineColor),
 					label = Text(msg = label.getOrElse("NO LABEL (spline)")),
-					strokeWidth = Some(5.0),
+					strokeWidth = Some(3.0),
 					lineStyle = if(dotted) Some(LineStyle.Dashed) else None //if(dotted) Some(LineStyle(dashPattern = Seq(2.0))) else None )
 				)),
 				xbounds = Some(Bounds(xmin, xmax))
@@ -207,7 +210,7 @@ object PlotHistAndSpline {
 	def getSketchHist(sketch: Sketch[Double], histColor: Color, label: Option[String] = None): Plot = {
 
 		// Create the sample data from the sketch for the histogram
-		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE_FROM_SKETCH)._2
+		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE)._2
 
 		getHist(rawData, histColor, label)
 	}
@@ -302,22 +305,13 @@ object PlotHistAndSpline {
 
 
 
-
-
-	def plotHistSplineFromSketches[T: Numeric, D](sketches: Seq[Sketch[Double]],
-							 titleName: Option[String] = None,
-							 HOW_MANY: Option[Int] = Some(5),
-							 givenColorSeq: Option[Seq[Color]] = None,
-							 graphToColorLabels: Option[Seq[String]] = None,
-							 originalDists: Option[Seq[Distr[T, D]]] = None
-							 /*dotted: Boolean = false*/)(implicit evProb: ProbabilityFunction[T, D]): Any = {
+	def getSketchHistSplines(sketches: Seq[Sketch[Double]],
+						 HOW_MANY: Option[Int] = Some(5),
+						 givenColorSeq: Option[Seq[Color]] = None,
+						 graphToColorLabels: Option[Seq[String]] = None): Seq[Plot] = {
 
 		// Create indexed list of sketches
 		val indexedSketches: Seq[(Int, Sketch[Double])] = sketches.indices.zip(sketches)
-
-		// Get xbounds
-		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE_FROM_SKETCH)._2)
-		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
 
 		// Select just few for plotting (max 5 for now)
 		val howManyToShow: Int = HOW_MANY.isDefined match {
@@ -330,10 +324,6 @@ object PlotHistAndSpline {
 
 		val step: Int = scala.math.ceil(indexedSketches.length * 1.0 / howManyToShow).toInt
 		val shorterIndexedSketches = indexedSketches.filter{ case (idx, _) => idx % step == 0}
-		val shorterOriginalDists: Seq[(Int, Distr[T, D])] = originalDists.isDefined match {
-			case true => originalDists.get.indices.zip(originalDists.get).filter{ case (idx, _) => idx % step == 0}
-			case false => Seq().asInstanceOf[Seq[(Int, Distr[T, D])]]
-		}
 
 		println(s"step = $step, lengthshortersketches.length = ${shorterIndexedSketches.length}")
 
@@ -344,9 +334,8 @@ object PlotHistAndSpline {
 
 		assert(colorSeq.length == howManyToShow, "ERROR: lengths of colors must equal length of sketches and " +
 			"number to show")
-		assert(howManyToShow == shorterIndexedSketches.length
-			&& howManyToShow == shorterOriginalDists, "ERROR: length of colors must equal length of sketches and " +
-			"original distributions")
+		assert(howManyToShow == shorterIndexedSketches.length,
+			"ERROR: length of colors must equal length of sketches")
 
 		// Flag whether to use dotted line for splines or not
 		val isDotted: Boolean = true // if(originalDists.isDefined) true else false
@@ -370,15 +359,96 @@ object PlotHistAndSpline {
 		}
 
 		val histsAndSplines: Seq[Plot] = sketchesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
+
+		return histsAndSplines
+	}
+
+	// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter
+	def plotSketchHistSplines(sketches: Seq[Sketch[Double]],
+						titleName: Option[String] = None,
+						HOW_MANY: Option[Int] = Some(5),
+						givenColorSeq: Option[Seq[Color]] = None,
+						graphToColorLabels: Option[Seq[String]] = None): Unit = {
+
+		// Get xbounds for the plot
+		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)
+		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
+
+		val histsAndSplines: Seq[Plot] = getSketchHistSplines(sketches, HOW_MANY, givenColorSeq,
+			graphToColorLabels)
+
+		val plt: Drawable = Overlay(histsAndSplines: _*)
+			.xAxis()
+			.yAxis()
+			.xbounds(lower = xMIN, upper = xMAX)
+			.title(titleName.getOrElse(""))
+			.standard() //.frame()
+			.overlayLegend() // for name labels to appear
+			.xLabel("x")
+			.yLabel("y").render() //.frame().render()
+		/*.overlayLegend(x=0.8).*/
+
+		displayPlot(plt)
+	}
+
+	// TODO make a general version contaiining the boilerplate code common toboth, returning just the plot object
+	//  before all the drawable and display business, and let that get returned in THIS ONE with original dists arg,
+	//  so you can have the original dists logic separately, and combine the two overlayplots separately
+	def getSketchHistSplineWithDists[T: TypeTag : Numeric, D](sketches: Seq[Sketch[Double]],
+							 HOW_MANY: Option[Int] = Some(5),
+							 givenColorSeq: Option[Seq[Color]] = None,
+							 graphToColorLabels: Option[Seq[String]] = None,
+							 originalDists: Seq[Distr[T, D]])
+												  (implicit evProb: ProbabilityFunction[T, D],
+												   evSamp: Sampling[T, Distr[T, D]])
+	: Seq[Plot]= {
+
+		// Get first part of the plotting
+		val histsAndSplines: Seq[Plot] = getSketchHistSplines(sketches, HOW_MANY, givenColorSeq,
+			graphToColorLabels)
+
+		// Create the original dist objects
+		// Select just few for plotting (max 5 for now)
+		val howManyToShow: Int = histsAndSplines.length
+
+		val step: Int = scala.math.ceil(originalDists.length * 1.0 / howManyToShow).toInt
+
+		val shorterOriginalDists: Seq[(Int, Distr[T, D])] = originalDists.indices
+			.zip(originalDists)
+			.filter{ case (idx, _) => idx % step == 0}
+
+		val colorSeq: Seq[Color] = givenColorSeq.isDefined match {
+			case false => Color.getGradientSeq(shorterOriginalDists.length)
+			case true => givenColorSeq.get
+		}
+
 		val densities: Seq[Plot] = shorterOriginalDists.unzip._2
 			.zip(colorSeq)
 			.map{ case (dst, color) => getDensity(dst, color)}
 
 		/*val plots: Seq[(Plot, Plot)] = sketchesWithPlots.map{ case (_, _, hist, spline) => (hist, spline )}
 		val (hists, splines): (Seq[Plot], Seq[Plot]) = (plots.unzip._1, plots.unzip._2)*/
+		histsAndSplines ++ densities
+	}
+
+	def plotSketchHistSplineWithDists[T: TypeTag : Numeric, D](sketches: Seq[Sketch[Double]],
+												   titleName: Option[String] = None,
+												   HOW_MANY: Option[Int] = Some(5),
+												   givenColorSeq: Option[Seq[Color]] = None,
+												   graphToColorLabels: Option[Seq[String]] = None,
+												   originalDists: Seq[Distr[T, D]])
+												   (implicit evProb: ProbabilityFunction[T, D],
+												    evSamp: Sampling[T, Distr[T, D]]): Unit = {
+
+		// Get xbounds for the plot
+		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)
+		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
+
+		val histSplineDensityPlots: Seq[Plot] = getSketchHistSplineWithDists(sketches, HOW_MANY, givenColorSeq,
+			graphToColorLabels, originalDists)
 
 		// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter
-		val plt: Drawable = Overlay((histsAndSplines ++ densities):_*)
+		val plt: Drawable = Overlay(histSplineDensityPlots:_*)
 			/* Overlay(splines:_*).topLegend(labels = graphToColorLabels)
 			.overlay(hists:_*)*/
 			.xAxis()
@@ -392,23 +462,6 @@ object PlotHistAndSpline {
 		/*.overlayLegend(x=0.8).*/
 
 		displayPlot(plt)
-
-		// TODO have label + linestyle dashed for sketch + solid line for original gammas
-		/*val plot1 = FunctionPlot.series(
-			function = mixtureFunc,
-			numPoints = Some(NUM_POINTS), // to be bigger than default of 800
-			xbounds = Some(Bounds(xMIN, xMAX)),
-			name = labelFunc,
-			color = color
-		)
-		plot1*/
-		/*FunctionPlot(
-			function = mixtureFunc,
-			xbounds = Some(Bounds(xMIN, xMAX)),
-			numPoints = Some(NUM_POINTS), // to be > than fdefault of 800
-			//TODO how to pass linestyle?
-			pathRenderer = Some(PathRenderer.default()) // dashed style
-		).overlay(plot1)*/
 	}
 
 

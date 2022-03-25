@@ -11,10 +11,21 @@ import util.graph.PlotHistAndSpline._
 import util.EnhanceFlipSketchUpdate._
 
 import scala.language.implicitConversions
-
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances.AllInstances._
 //import util.distributionExtensions.syntax._
+
+
+// TEMPORARY PLOT IMPORTS
+
+import com.cibo.evilplot._
+import com.cibo.evilplot.colors.{CategoricalColoring, Color, Coloring, GradientMode, HTMLNamedColors}
+import com.cibo.evilplot.geometry.{Drawable, EmptyDrawable, LineStyle, Text}
+import com.cibo.evilplot.numeric.{Bounds, Point}
+import com.cibo.evilplot.plot._
+import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
+import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRenderer}
+
 
 /**
  *
@@ -65,6 +76,7 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	val gammaMultiSampleData: List[List[Double]] = gammasIncrementalMove.map(gdist => gdist.sample(SAMPLE_SIZE).toList).toList
 
 
+	val (xMIN, xMAX) = (gammaMultiSampleData.flatten.min, gammaMultiSampleData.flatten.max)
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
@@ -94,13 +106,35 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	println(s"gammaMultiSampleSketches.length = ${gammaMultiSampleSketches.length}")
 
 
-	plotHistSplineFromSketches(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning
+	// NOTE TEMPORARY COMMENTING
+	plotSketchHistSplineWithDists(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(List("green gamma", "red gamma", "purple gamma", "orange gamma", "blue gamma")),
-		originalDists = Some(gammasIncrementalMove))
+		originalDists = gammasIncrementalMove
+	)
+
+
+	// -------------------------------------------------
 	//val c: Color = HTMLNamedColors.red
 
+	val colorSeq: Seq[Color] = List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
+		.orange, HTMLNamedColors.blue)
+	val densities: Seq[Plot] = gammasIncrementalMove
+		.zip(colorSeq)
+		.map{ case (dst, color) => getDensity(dst, color)}
+
+	val plt: Drawable = Overlay(densities:_*)
+		.xAxis()
+		.yAxis()
+		//.xbounds(lower = xMIN, upper = xMAX)
+		.standard() //.frame()
+		.overlayLegend() // for name labels to appear
+		.xLabel("x")
+		.yLabel("y").render()//.frame().render()
+	/*.overlayLegend(x=0.8).*/
+
+	displayPlot(plt)
 
 }

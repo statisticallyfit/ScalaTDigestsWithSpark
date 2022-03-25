@@ -85,9 +85,10 @@ object Example_IncrementalConceptDrift extends App {
 	//  time  (index).
 
 	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
-	plotHistSplineFromSketches(timeSketchesFromOneDataEveryTenth.unzip._2.drop(1),
+	plotSketchHistSplines(timeSketchesFromOneDataEveryTenth.unzip._2.drop(1),
 		titleName = Some("Sketches from sample size = 1"))
-
+	// TODO error requires to separate the original dists func from the non-original dists func to avoid the
+	//  typeerror when not passing the original dists func (separate FUNCTIONS)
 
 
 
@@ -99,7 +100,7 @@ object Example_IncrementalConceptDrift extends App {
 			.filter { case (time, _) => time % 10 == 0}.toList
 
 	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
-	plotHistSplineFromSketches(timeSketchesFromMultiDataEveryTenth.unzip._2.drop(1),
+	plotSketchHistSplines(timeSketchesFromMultiDataEveryTenth.unzip._2.drop(1),
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_NUM_FOR_TIME_DIST"))
 
 
