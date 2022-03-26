@@ -22,7 +22,7 @@ import com.cibo.evilplot.plot.renderers.BarRenderer
 
 import smile.stat.distribution._
 
-import util.graph.PlotHistAndSpline._
+import util.graph.PlotMixture._
 /**
  *
  */

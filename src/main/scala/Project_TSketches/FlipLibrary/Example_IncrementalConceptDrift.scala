@@ -4,7 +4,7 @@ package Project_TSketches.FlipLibrary
 import flip.implicits._
 import flip.pdf.Sketch
 
-import util.graph.PlotHistAndSpline._
+import util.graph.PlotSketch._
 
 import scala.language.implicitConversions
 

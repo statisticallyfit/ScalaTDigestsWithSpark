@@ -2,7 +2,7 @@ package Project_TSketches.FlipLibrary
 
 import flip.implicits.{Cosine, Delta, ED, Euclidean, KLD, NumericDist, Sketch, SketchConf}
 
-import util.graph.PlotHistAndSpline._
+import util.graph.PlotSketch._
 
 /**
  * A experiment for sudden concept drift.

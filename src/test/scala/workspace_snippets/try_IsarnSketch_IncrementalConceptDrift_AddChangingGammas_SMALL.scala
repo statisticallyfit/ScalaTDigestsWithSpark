@@ -1,18 +1,22 @@
 package workspace_snippets
 
 
-
 import com.cibo.evilplot.colors.{Color, HTMLNamedColors}
+/*import flip.implicits._
+import flip.pdf.Sketch*/
 
-import flip.implicits._
-import flip.pdf.Sketch
+import org.isarnproject.sketches.TDigest
 
-import util.graph.PlotSketch._
+import util.graph.PlotTDigest._
 import util.EnhanceFlipSketchUpdate._
 
+import utilTest.TestData.MAX_DISCRETE
+
 import scala.language.implicitConversions
+
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances.AllInstances._
+
 //import util.distributionExtensions.syntax._
 
 
@@ -30,16 +34,7 @@ import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRendere
 /**
  *
  */
-object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends App {
-
-	val expName = "incremental-cd-gammas"
-	//val dataNo = 10000 // TODO DEBUG next reduce sample_size_from_sketch and increasea this one to 50,000
-	// changed dataNo (was 1000)
-	//val draftStart = 300
-	//val draftStartingPoint = 0.0
-	//val velocity = 0.01
-
-
+object try_IsarnSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends App {
 	val SAMPLE_SIZE = 8000 // was 1000
 
 	/**
@@ -73,27 +68,21 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	// Creating list of samples from underlying distribution, length = dataNo = 1000 - taking one sample point from
 	// the dist
 	val gammaOneSampleData: List[Double] = gammasIncrementalMove.map(gdist => gdist.sample).toList
-	val gammaMultiSampleData: List[List[Double]] = gammasIncrementalMove.map(gdist => gdist.sample(SAMPLE_SIZE).toList).toList
+	val gammaMultiSampleData: List[Array[Double]] = gammasIncrementalMove.map(gdist => gdist.sample(SAMPLE_SIZE)).toList
 
 
 	val (xMIN, xMAX) = (gammaMultiSampleData.flatten.min, gammaMultiSampleData.flatten.max)
 
-	implicit val conf: SketchConf = SketchConf(
-		cmapStart = Some(-40.0),
-		cmapEnd = Some(40.0) // NOTE changed here from (-20, 20) --- what does this do?
-	)
-
-
-	val sketch0: Sketch[Double] = Sketch.empty[Double]
-	val sketch00: Sketch[Double] = Sketch.empty[Double]
-	//val firstTD: TDigest = TDigest.sketch(gammaDatas.head, maxDiscrete = MAX_DISCRETE)
-
+	// Creating list of sketches which are cumulatively updated from the previous one
+	val gammaMultiSampleSketches: Seq[TDigest] = gammaMultiSampleData
+		.map((distSmp: Array[Double]) => TDigest.sketch(distSmp, maxDiscrete = MAX_DISCRETE))
+		.scanLeft(TDigest.empty())((ltd: TDigest, rtd: TDigest) => TDigest.combine(ltd, rtd, maxDiscrete = MAX_DISCRETE))
+		.drop(1) // drop the empty one
+	//val gammaMultiSampleSketches: Seq[Sketch[Double]] = sketch00 :: sketch00.updateWithMany(gammaMultiSampleData)
 
 	// Creating the sketches and combining them:
-	val gammaOneSampleSketches: Seq[Sketch[Double]] = sketch0 :: sketch0.updateTrace(gammaOneSampleData)
+	//val gammaOneSampleSketches: Seq[Sketch[Double]] = sketch0 :: sketch0.updateTrace(gammaOneSampleData)
 
-	// Contains list of incrementally updated sketches - so last one contains all information from previous ones.
-	val gammaMultiSampleSketches: Seq[Sketch[Double]] = sketch00 :: sketch00.updateWithMany(gammaMultiSampleData)
 
 
 	// ----------------------------------------------------------------------------------------------------------------
@@ -108,13 +97,11 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	println(s"gammaMultiSampleSketches.length = ${gammaMultiSampleSketches.length}")
 
 
-	// NOTE TEMPORARY COMMENTING
-	plotSketchHistSplineWithDists(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning
+	plotSketchHistSplineWithDists(gammaMultiSampleSketches, // drop the empty sketch at beginning
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(List("green gamma", "red gamma", "purple gamma", "orange gamma", "blue gamma")),
 		originalDists = gammasIncrementalMove
 	)
-
 }
