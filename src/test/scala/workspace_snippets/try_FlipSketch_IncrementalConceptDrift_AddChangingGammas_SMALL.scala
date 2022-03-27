@@ -105,7 +105,16 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	//  < xMax
 	//plotHistSplineFromSketches(gammaOneSampleSketches.drop(2), titleName = Some("Sketches from sample size = 1"))
 
+	println(s"gammaOneSampleSketches.length = ${gammaOneSampleSketches.length}")
 	println(s"gammaMultiSampleSketches.length = ${gammaMultiSampleSketches.length}")
+
+	// HELP this doesn't work - the function samples 8000 but of course still gets a list of just -40 ... how does
+	//  Flip do it - TODO try normal instead of gamma to see if it works as in the given Flip example (using normal)
+	/*plotSketchHistSplines(Seq(gammaOneSampleSketches.last), // drop the empty sketch at beginning
+		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
+		givenColorSeq = Some(List(HTMLNamedColors.blue)),
+		graphToColorLabels = Some(List("blue gamma"))
+	)*/
 
 
 	// NOTE TEMPORARY COMMENTING
