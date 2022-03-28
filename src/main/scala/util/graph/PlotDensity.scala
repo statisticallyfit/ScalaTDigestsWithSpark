@@ -14,6 +14,7 @@ import smile.stat.distribution.{KernelDensity, Mixture}
 
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances._
+import util.distributionExtensions.instances.AllInstances._
 import util.distributionExtensions.syntax._
 
 import scala.reflect.runtime.universe._
@@ -55,5 +56,34 @@ object PlotDensity {
 			)),
 			xbounds = Some(Bounds(distXMin, distXMax)) // NOTE necessary to include x bounds or graphs WON'T appear
 		)
+	}
+
+
+	def plotDensities[T: TypeTag, D](dists: Seq[Distr[T, D]],
+							 titleName: Option[String] = None,
+							 givenColorSeq: Option[Seq[Color]] = None)(implicit evNum: Numeric[T],
+										    evSamp: Sampling[T, Distr[T, D]], // TODO change to T, D
+										    evProb: ProbabilityFunction[T, D]): Unit = {
+
+		val sampleData: Seq[Double] = dists.flatMap(_.sample(SAMPLE_SIZE)).map(evNum.toDouble(_))
+		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
+
+		val colorSeq: Seq[Color] = givenColorSeq.isDefined match {
+			case false => Color.getGradientSeq(dists.length)
+			case true => givenColorSeq.get
+		}
+		val densityPlots: Seq[Plot] = dists.zip(colorSeq).map{ case (d, c) => getDensity(d, c)}
+
+		val plt: Drawable = Overlay(densityPlots: _*)
+			.xAxis()
+			.yAxis()
+			.xbounds(lower = xMIN, upper = xMAX)
+			.title(titleName.getOrElse(""))
+			.standard() //.frame()
+			.overlayLegend() // for name labels to appear
+			.xLabel("x")
+			.yLabel("y").render()
+
+		displayPlot(plt)
 	}
 }
