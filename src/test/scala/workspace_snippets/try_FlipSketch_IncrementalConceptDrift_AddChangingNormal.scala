@@ -7,13 +7,14 @@ import flip.implicits._
 import flip.pdf.Sketch
 
 import util.graph.PlotSketch._
+import util.graph.PlotDensity._
 import util.EnhanceFlipSketchUpdate._
 
 import scala.language.implicitConversions
 import scala.language.higherKinds
 
 import util.distributionExtensions.distributions._
-import util.distributionExtensions.instances._
+import util.distributionExtensions.instances.AllInstances._ //otherwise cannot find implicit value for evProb, evSamp
 //import util.distributionExtensions.syntax._
 
 
@@ -39,13 +40,13 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
 	// TODO start here tomorrow and run the below code in REPL to get dists that are not mean zero to get larger
 	//  thdraft starting point
-	val dataNo = 500 //10000
+	val dataNo = 1000 //500 //10000
 	// changed dataNo (was 1000)
-	val draftStart = 300
+	val draftStart = 100 //300
 	val draftStartingPoint = 0.0
 	val velocity = 0.01
 
-	val SAMPLE_SIZE = 5000 //8000 // was 1000
+	val SAMPLE_SIZE = 500 //8000 // was 1000
 
 	/**
 	 * Concept drift component #1 =
@@ -56,6 +57,8 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	def center(idx: Int): Double =
 		if (draftStart > idx) draftStartingPoint
 		else draftStartingPoint + velocity * (idx - draftStart)
+	// for console
+	// def center(idx: Int): Double = if (draftStart > idx) draftStartingPoint else draftStartingPoint + velocity * (idx - draftStart)
 
 	//def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
 	def underlying(idxTime: Int)/*(implicit evSmp: Sampling[Double, Distr[Double, NormalDist]])*/: NormalDist =
@@ -80,6 +83,9 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	//val gammasIncrementalMove: Seq[GammaDist] = List(greenGamma, redGamma, purpleGamma, orangeGamma, blueGamma)
 	/*val smpNorm = implicitly[Sampling[Double, Distr[Double, NormalDist]]]*/
 	val normalDists: List[NormalDist] = (0 to dataNo).toList.map(idxTime => underlying(idxTime))
+	val normalDistsEveryTenth: List[NormalDist] = normalDists.indices.zip(normalDists)
+		.filter{ case (idx, _) => idx	% 10 == 0}.unzip._2.toList
+
 	val normalOneSampleData: List[Double] = normalDists.map(_.sample)
 	val normalMultiSampleData: List[List[Double]] = normalDists.map(_.sample(SAMPLE_SIZE).toList).toList
 
@@ -98,9 +104,13 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
 	// Creating the sketches and combining them:
 	val normalOneSampleSketches: Seq[Sketch[Double]] = sketch0 :: sketch0.updateTrace(normalOneSampleData)
+	val normalOneEveryTenthSketches = normalOneSampleSketches.indices.zip(normalOneSampleSketches)
+		.filter{ case(idx, _) => idx % 10 == 0}.unzip._2
 
 	// Contains list of incrementally updated sketches - so last one contains all information from previous ones.
 	val normalMultiSampleSketches: Seq[Sketch[Double]] = sketch00 :: sketch00.updateWithMany(normalMultiSampleData)
+	val normalMultiEveryTenthSketches = normalMultiSampleSketches.indices.zip(normalMultiSampleSketches)
+		.filter{ case(idx, _) => idx % 10 == 0}.unzip._2
 
 
 	// ----------------------------------------------------------------------------------------------------------------
@@ -116,20 +126,25 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	println(s"normalMultiSampleSketches.length = ${normalMultiSampleSketches.length}")
 
 
-	plotSketchHistSplines(normalOneSampleSketches.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"Normal sketches Using Flip Center Drift with Sample size = $SAMPLE_SIZE"),
+	plotSketchHistSplines(normalOneEveryTenthSketches.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDists.map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
 	)
 
 
-	// NOTE TEMPORARY COMMENTING
-	plotSketchHistSplineWithDists(normalMultiSampleSketches.drop(1), // drop the empty sketch at beginning
+	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
+
+	plotSketchHistSplines(normalMultiEveryTenthSketches.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE"),
+		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+	)
+	/*plotSketchHistSplineWithDists(normalMultiSampleSketches.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
-		graphToColorLabels = Some(List("green gamma", "red gamma", "purple gamma", "orange gamma", "blue gamma")),
-		originalDists = gammasIncrementalMove
-	)
+		graphToColorLabels = Some(normalDists.map(_.toString)),
+		originalDists = normalDists.map(_.asInstanceOf[Distr[Real, NormalDist]])
+	)*/
 
 }

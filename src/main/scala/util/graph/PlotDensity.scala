@@ -52,7 +52,7 @@ object PlotDensity {
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(distColor),
 				label = Text(msg = dist.getDist.toString),
-				strokeWidth = Some(5.0)
+				strokeWidth = Some(3.0)
 			)),
 			xbounds = Some(Bounds(distXMin, distXMax)) // NOTE necessary to include x bounds or graphs WON'T appear
 		)
@@ -61,18 +61,33 @@ object PlotDensity {
 
 	def plotDensities[T: TypeTag, D](dists: Seq[Distr[T, D]],
 							 titleName: Option[String] = None,
+							   HOW_MANY: Option[Int] = Some(5),
 							 givenColorSeq: Option[Seq[Color]] = None)(implicit evNum: Numeric[T],
 										    evSamp: Sampling[T, Distr[T, D]], // TODO change to T, D
 										    evProb: ProbabilityFunction[T, D]): Unit = {
 
+		val indexedDists: Seq[(Int, Distr[T, D])] = dists.indices.zip(dists)
+
 		val sampleData: Seq[Double] = dists.flatMap(_.sample(SAMPLE_SIZE)).map(evNum.toDouble(_))
 		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
 
+		val howManyToShow: Int = HOW_MANY.isDefined match {
+			case false => indexedDists.length
+			case true => indexedDists.length <= HOW_MANY.get match {
+				case true => indexedDists.length
+				case false => HOW_MANY.get
+			}
+		}
+
+		val step: Int = scala.math.ceil(indexedDists.length * 1.0 / howManyToShow).toInt
+		val shorterDists = indexedDists.filter{ case (idx, _) => idx % step == 0}
+
 		val colorSeq: Seq[Color] = givenColorSeq.isDefined match {
-			case false => Color.getGradientSeq(dists.length)
+			case false => Color.getGradientSeq(shorterDists.length)
 			case true => givenColorSeq.get
 		}
-		val densityPlots: Seq[Plot] = dists.zip(colorSeq).map{ case (d, c) => getDensity(d, c)}
+		val densityPlots: Seq[Plot] = shorterDists.unzip._2
+			.zip(colorSeq).map{ case (d, c) => getDensity(d, c)}
 
 		val plt: Drawable = Overlay(densityPlots: _*)
 			.xAxis()
