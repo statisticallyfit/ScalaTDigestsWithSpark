@@ -5,10 +5,12 @@ import flip.implicits._
 import flip.pdf.Sketch
 
 import util.graph.PlotSketch._
+import util.graph.PlotDensity._
 
 import scala.language.implicitConversions
 
 import util.EnhanceFlipSketchUpdate._
+
 
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances.AllInstances._
@@ -32,7 +34,7 @@ object Example_IncrementalConceptDrift extends App {
 	val velocity = 0.01
 
 
-	val SAMPLE_NUM_FOR_TIME_DIST = 1000
+	val SAMPLE_SIZE = 1000
 
 	/**
 	 * Concept drift component #1 =
@@ -46,62 +48,93 @@ object Example_IncrementalConceptDrift extends App {
 
 	def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
 
+	val normalDists: List[NumericDist[Double]] = (0 to dataNo).toList.map(idxTime => underlying(idxTime))
+	val normalDistsEveryTenth: List[NumericDist[Double]] = normalDists.drop(draftStart).indices.zip(normalDists.drop(draftStart))
+		.filter{ case (idx, _) => idx	% 10 == 0}.unzip._2.toList
+
 	// Creating list of samples from underlying distribution, length = dataNo = 1000 - taking one sample point from
 	// the dist
-	val oneSampleDatas: List[Double] = (0 to dataNo).toList.map(idx => underlying(idx).sample._2)
-	val multiSampleDatas: List[List[Double]] =
-		(0 to dataNo).toList.map(idx => underlying(idx).samples(SAMPLE_NUM_FOR_TIME_DIST)._2)
+	val normalOneSampleData: List[Double] = normalDists.map(_.sample._2)
+	val normalMultiSampleData: List[List[Double]] = normalDists.map(_.samples(SAMPLE_SIZE)._2.toList).toList
 
 
 	// TODO ATTEMPT: graphing the time  - with - dist-sketch ---------------------------------------------------------------
-
-
-	val distTimePairs: Seq[(Int, List[Double])] = multiSampleDatas.indices.zip(multiSampleDatas)
-
+	//val distTimePairs: Seq[(Int, List[Double])] = normalMultiSampleData.indices.zip(normalMultiSampleData)
 	//plotMovingTimeDataWithSpline(distTimePairs, HOW_MANY = 20)
-
-
 	// ----------------------------------------------------------------------------------------------------------------
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
 		cmapEnd = Some(40.0) // NOTE changed here from (-20, 20) --- what does this do?
 	)
+
 	val sketch0: Sketch[Double] = Sketch.empty[Double]
+	val sketch00: Sketch[Double] = Sketch.empty[Double]
 
+
+
+
+	// Creating the sketches and combining them:
 	// TESTING what happens when sketch is made from sample(1)
-	val sketchFromOneData: List[Sketch[Double]] = sketch0 :: sketch0.updateTrace(oneSampleDatas)
+	val normalOneSampleSketches: Seq[Sketch[Double]] = (sketch0 :: sketch0.updateTrace(normalOneSampleData))
+		.drop(draftStart) // drop the ones with  mean == 0
+	val normalOneEveryTenthSketches = normalOneSampleSketches.indices.zip(normalOneSampleSketches)
+		.filter{ case(idx, _) => idx % 10 == 0}
+		.unzip._2
 
-	val timeSketchesFromOneDataEveryTenth: List[(Int, Sketch[Double])] = sketchFromOneData.indices.zip(sketchFromOneData)
-		.toList.filter { case (idx, _) => idx % 10 == 0 }
-	// so dataNo (1000) / 10 = 100 elements left
+	/*plotSketchHistSplines(timeSketchesFromOneDataEveryTenth.unzip._2.drop(1),
+		titleName = Some("Sketches from sample size = 1"))*/
+	// TODO error requires to separate the original dists func from the non-original dists func to avoid the
+	//  typeerror when not passing the original dists func (separate FUNCTIONS)
 
-	// Printing the datas length
-	println(s"oneSampleDatas.length = ${oneSampleDatas.length}")
-	println(s"timeSketchesFromOneDataEveryTenth.length = ${timeSketchesFromOneDataEveryTenth.length}")
+
+	// TESTING: what happens when sketch is made from a larger sample than just 1
+	// Contains list of incrementally updated sketches - so last one contains all information from previous ones.
+	val normalMultiSampleSketches: Seq[Sketch[Double]] = (sketch00 :: sketch00.updateWithMany(normalMultiSampleData))
+		.drop(draftStart) // drop the ones with mean == 0
+	val normalMultiEveryTenthSketches = normalMultiSampleSketches.indices.zip(normalMultiSampleSketches)
+		.filter{ case(idx, _) => idx % 10 == 0}
+		.unzip._2
+
+
+	// PLOTTING
+	println(s"normalDistsEveryTenth.length = ${normalDistsEveryTenth.length}")
+	println(s"normalOneEveryTenthSketches.length = ${normalOneEveryTenthSketches.length}")
+	println(s"normalMultiEveryTenthSketches.length = ${normalMultiEveryTenthSketches.length}")
+
+
+	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: (Flip's) Normal sketches Using Flip Center Drift (left out first " +
+			s"`draftNum` sketches)"),
+		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
+		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+	)
+
+
+	// Just changing the flip objects to my object so that can pass to my plotting function
+	val flipNormalDists: List[flip.pdf.NormalDist[Double]] = normalDistsEveryTenth.map(nn => nn.asInstanceOf[flip.pdf.NormalDist[Double]])
+	val myNormalDists: List[NormalDist] = flipNormalDists.map(nn => NormalDist(mu = nn.mean, std = scala.math.sqrt(nn.variance)))
+
+	plotDensities(myNormalDists, HOW_MANY = Some(10))
+
+	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"Multi-batch samples: (Fli's) Normal Sketches, Sample size = $SAMPLE_SIZE (left out first" +
+			s" `draftNum` sketches)"),
+		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+	)
+
+
 
 	// NOTE: Indeed the x-axis represents time because the `updateTrace` from Flip returns one sketch per sampled
 	//  value that corresponds to the time (index) it was mapped to, so then you can say that sketch corresponds to that
 	//  time  (index).
 
-	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
-	plotSketchHistSplines(timeSketchesFromOneDataEveryTenth.unzip._2.drop(1),
-		titleName = Some("Sketches from sample size = 1"))
-	// TODO error requires to separate the original dists func from the non-original dists func to avoid the
-	//  typeerror when not passing the original dists func (separate FUNCTIONS)
-
-
-
-	// TESTING: what happens when sketch is made from a larger sample than just 1
-	val sketchFromMultiData: List[Sketch[Double]] = sketch0 :: sketch0.updateWithMany(multiSampleDatas)
-
-	val timeSketchesFromMultiDataEveryTenth: List[(Int, Sketch[Double])] =
-		sketchFromMultiData.indices.zip(sketchFromMultiData)
-			.filter { case (time, _) => time % 10 == 0}.toList
+	/*val timeSketchesFromMultiDataEveryTenth: List[(Int, Sketch[Double])] =
+		normalMultiEveryTenthSketches.indices.zip(normalMultiEveryTenthSketches).toList
 
 	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
 	plotSketchHistSplines(timeSketchesFromMultiDataEveryTenth.unzip._2.drop(1),
-		titleName = Some(s"Sketches from Sample size = $SAMPLE_NUM_FOR_TIME_DIST"))
+		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"))*/
 
 
 

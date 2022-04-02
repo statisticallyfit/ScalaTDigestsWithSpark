@@ -40,13 +40,13 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
 	// TODO start here tomorrow and run the below code in REPL to get dists that are not mean zero to get larger
 	//  thdraft starting point
-	val dataNo = 1000 //500 //10000
+	val dataNo = 10000 //1000 //500 //10000
 	// changed dataNo (was 1000)
-	val draftStart = 100 //300
+	val draftStart = 300 //100 //300
 	val draftStartingPoint = 0.0
 	val velocity = 0.01
 
-	val SAMPLE_SIZE = 500 //8000 // was 1000
+	val SAMPLE_SIZE = 1000 //4000 //500 //8000 // was 1000
 
 	/**
 	 * Concept drift component #1 =
@@ -83,13 +83,13 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	//val gammasIncrementalMove: Seq[GammaDist] = List(greenGamma, redGamma, purpleGamma, orangeGamma, blueGamma)
 	/*val smpNorm = implicitly[Sampling[Double, Distr[Double, NormalDist]]]*/
 	val normalDists: List[NormalDist] = (0 to dataNo).toList.map(idxTime => underlying(idxTime))
-	val normalDistsEveryTenth: List[NormalDist] = normalDists.indices.zip(normalDists)
+	val normalDistsEveryTenth: List[NormalDist] = normalDists.drop(draftStart).indices.zip(normalDists.drop(draftStart))
 		.filter{ case (idx, _) => idx	% 10 == 0}.unzip._2.toList
 
 	val normalOneSampleData: List[Double] = normalDists.map(_.sample)
 	val normalMultiSampleData: List[List[Double]] = normalDists.map(_.sample(SAMPLE_SIZE).toList).toList
 
-	val (xMIN, xMAX) = (normalMultiSampleData.flatten.min, normalMultiSampleData.flatten.max)
+	//val (xMIN, xMAX) = (normalMultiSampleData.flatten.min, normalMultiSampleData.flatten.max)
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
@@ -103,14 +103,20 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
 
 	// Creating the sketches and combining them:
-	val normalOneSampleSketches: Seq[Sketch[Double]] = sketch0 :: sketch0.updateTrace(normalOneSampleData)
+	val normalOneSampleSketches: Seq[Sketch[Double]] = (sketch0 :: sketch0.updateTrace(normalOneSampleData))
+		.drop(draftStart) // drop the ones with  mean == 0
 	val normalOneEveryTenthSketches = normalOneSampleSketches.indices.zip(normalOneSampleSketches)
-		.filter{ case(idx, _) => idx % 10 == 0}.unzip._2
+		.filter{ case(idx, _) => idx % 10 == 0}
+		.unzip._2
+		//.drop(draftStart) // drop the ones with mean == 0
 
 	// Contains list of incrementally updated sketches - so last one contains all information from previous ones.
-	val normalMultiSampleSketches: Seq[Sketch[Double]] = sketch00 :: sketch00.updateWithMany(normalMultiSampleData)
+	val normalMultiSampleSketches: Seq[Sketch[Double]] = (sketch00 :: sketch00.updateWithMany(normalMultiSampleData))
+		.drop(draftStart) // drop the ones with mean == 0
 	val normalMultiEveryTenthSketches = normalMultiSampleSketches.indices.zip(normalMultiSampleSketches)
-		.filter{ case(idx, _) => idx % 10 == 0}.unzip._2
+		.filter{ case(idx, _) => idx % 10 == 0}
+		.unzip._2
+
 
 
 	// ----------------------------------------------------------------------------------------------------------------
@@ -122,12 +128,13 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	//  < xMax
 	//plotHistSplineFromSketches(gammaOneSampleSketches.drop(2), titleName = Some("Sketches from sample size = 1"))
 
-	println(s"normalOneSampleSketches.length = ${normalOneSampleSketches.length}")
-	println(s"normalMultiSampleSketches.length = ${normalMultiSampleSketches.length}")
+	println(s"normalDistsEveryTenth.length = ${normalDistsEveryTenth.length}")
+	println(s"normalOneEveryTenthSketches.length = ${normalOneEveryTenthSketches.length}")
+	println(s"normalMultiEveryTenthSketches.length = ${normalMultiEveryTenthSketches.length}")
 
 
-	plotSketchHistSplines(normalOneEveryTenthSketches.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift"),
+	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
 		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
 	)
@@ -135,8 +142,9 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
 	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
 
-	plotSketchHistSplines(normalMultiEveryTenthSketches.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE"),
+	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
+			s"sketches)"),
 		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
 	)
 	/*plotSketchHistSplineWithDists(normalMultiSampleSketches.drop(1), // drop the empty sketch at beginning
