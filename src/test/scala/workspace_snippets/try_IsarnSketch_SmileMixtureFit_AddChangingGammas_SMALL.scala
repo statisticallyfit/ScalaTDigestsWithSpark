@@ -100,7 +100,7 @@ object try_IsarnSketch_SmileMixtureFit_AddChangingGammas_SMALL extends App {
 	/**
 	 * PLOTTING
 	 */
-	plotMixtureDist(sampleData, canonicalMixture, estimatedMixture, k)
+	plotMixtureTrueEstimated(sampleData, canonicalMixture, estimatedMixture, k)
 
 
 }

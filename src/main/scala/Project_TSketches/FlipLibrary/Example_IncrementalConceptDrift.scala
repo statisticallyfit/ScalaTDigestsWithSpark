@@ -107,7 +107,7 @@ object Example_IncrementalConceptDrift extends App {
 		titleName = Some(s"One-single Sample: (Flip's) Normal sketches Using Flip Center Drift (left out first " +
 			s"`draftNum` sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
 	)
 
 
@@ -120,7 +120,7 @@ object Example_IncrementalConceptDrift extends App {
 	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: (Fli's) Normal Sketches, Sample size = $SAMPLE_SIZE (left out first" +
 			s" `draftNum` sketches)"),
-		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
 	)
 
 

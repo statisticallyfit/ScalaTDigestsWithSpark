@@ -20,7 +20,7 @@ import smile.stat.distribution._
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances._
 import util.distributionExtensions.syntax._
-import util.graph.PlotDensity.getDensity
+import util.graph.PlotDensity._
 
 import scala.reflect.runtime.universe._
 
@@ -360,7 +360,8 @@ object PlotTDigest {
 												    HOW_MANY: Option[Int] = Some(5),
 												    givenColorSeq: Option[Seq[Color]] = None,
 												    graphToColorLabels: Option[Seq[String]] = None,
-												    originalDists: Seq[Distr[T, D]])
+												    originalDists: Seq[Distr[T, D]],
+												    overlayWithMixtureFit: Boolean = false)
 												   (implicit evProb: ProbabilityFunction[T, D],
 												    evSamp: Sampling[T, Distr[T, D]]): Unit = {
 
@@ -374,6 +375,7 @@ object PlotTDigest {
 		val histSplineDensityPlots: Seq[Plot] = getSketchHistSplineWithDists(sketches, HOW_MANY, givenColorSeq,
 			graphToColorLabels, originalDists)
 
+		// TODO abstractize and use the variable `overlayWithMixtureFit`
 		// HELP NOTE TEMPORARY including mixture model here with black line--------------------------------------
 		val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){sketches.last.samplePDF}
 

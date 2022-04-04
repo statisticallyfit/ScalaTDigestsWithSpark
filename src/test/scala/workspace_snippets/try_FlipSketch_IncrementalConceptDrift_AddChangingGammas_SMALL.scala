@@ -8,11 +8,14 @@ import flip.implicits._
 import flip.pdf.Sketch
 
 import util.graph.PlotSketch._
+import util.graph.PlotDensity._
 import util.EnhanceFlipSketchUpdate._
 
 import scala.language.implicitConversions
+import scala.language.higherKinds
+
 import util.distributionExtensions.distributions._
-import util.distributionExtensions.instances.AllInstances._
+import util.distributionExtensions.instances.AllInstances._ //otherwise cannot find implicit value for evProb, evSamp
 //import util.distributionExtensions.syntax._
 
 
@@ -27,32 +30,23 @@ import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRenderer}
 
 
+
 /**
  *
  */
 object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends App {
 
-	val expName = "incremental-cd-gammas"
-	//val dataNo = 10000 // TODO DEBUG next reduce sample_size_from_sketch and increasea this one to 50,000
+	// NOTE: these are the parameters that make the distributions spaced farther apart in the concept drift
+	//  illustration (forome reason; otherwise they are too close together .. TODO why?)
+	val dataNo = 10000 //1000 //500 //10000
 	// changed dataNo (was 1000)
-	//val draftStart = 300
-	//val draftStartingPoint = 0.0
-	//val velocity = 0.01
+	val draftStart = 300 //100 //300
+	val draftStartingPoint = 0.0
+	val velocity = 0.01
+
+	val SAMPLE_SIZE = 1000 //4000 //500 //8000 // was 1000
 
 
-	val SAMPLE_SIZE = 8000 // was 1000
-
-	/**
-	 * Concept drift component #1 =
-	 * -- Passes a center value and then if past a certain point, reverts back to  earlier values (cycling through
-	 * means so that the distributions add up cyclically (?). Otherwise, makes the center as function of velocity
-	 * and distance from a given point (draftStart)
-	 */
-	/*def center(idx: Int): Double =
-		if (draftStart > idx) draftStartingPoint
-		else draftStartingPoint + velocity * (idx - draftStart)*/
-
-	//def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
 	val (a1, b1) = (9, 33)
 	val (a2, b2) = (47, 49)
 	val (a3, b3) = (92, 26)
@@ -72,11 +66,9 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 
 	// Creating list of samples from underlying distribution, length = dataNo = 1000 - taking one sample point from
 	// the dist
-	val gammaOneSampleData: List[Double] = gammasIncrementalMove.map(gdist => gdist.sample).toList
-	val gammaMultiSampleData: List[List[Double]] = gammasIncrementalMove.map(gdist => gdist.sample(SAMPLE_SIZE).toList).toList
+	val gammaOneSampleData: List[Double] = gammasIncrementalMove.map(_.sample).toList
+	val gammaMultiSampleData: List[List[Double]] = gammasIncrementalMove.map(_.sample(SAMPLE_SIZE).toList).toList
 
-
-	val (xMIN, xMAX) = (gammaMultiSampleData.flatten.min, gammaMultiSampleData.flatten.max)
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
@@ -90,32 +82,34 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 
 
 	// Creating the sketches and combining them:
-	val gammaOneSampleSketches: Seq[Sketch[Double]] = sketch0 :: sketch0.updateTrace(gammaOneSampleData)
+	val gammaOneSampleSketches: Seq[Sketch[Double]] = (sketch0 :: sketch0.updateTrace(gammaOneSampleData))
+		.drop(1) // drop empty sketch at beginning
 
 	// Contains list of incrementally updated sketches - so last one contains all information from previous ones.
-	val gammaMultiSampleSketches: Seq[Sketch[Double]] = sketch00 :: sketch00.updateWithMany(gammaMultiSampleData)
+	val gammaMultiSampleSketches: Seq[Sketch[Double]] = (sketch00 :: sketch00.updateWithMany(gammaMultiSampleData))
+		.drop(1) // drop empty sketch at beginning
 
 
-	// ----------------------------------------------------------------------------------------------------------------
+	// PLOTTING ----------------------------------------------------------------------------------------------------
 
-	// NOTE: Indeed the x-axis represents time because the `updateTrace` from Flip returns one sketch per sampled
-	//  value that corresponds to the time (index) it was mapped to, so then you can say that sketch corresponds to that
-	//  time  (index).
-	// NOTE: must drop 1 sketch because oerwise gives error from manyangled.snowball interpolation that must be xMin
-	//  < xMax
-	//plotHistSplineFromSketches(gammaOneSampleSketches.drop(2), titleName = Some("Sketches from sample size = 1"))
-
+	println(s"gammasIncrementalMove.length = ${gammasIncrementalMove.length}")
 	println(s"gammaOneSampleSketches.length = ${gammaOneSampleSketches.length}")
 	println(s"gammaMultiSampleSketches.length = ${gammaMultiSampleSketches.length}")
 
-	// HELP this doesn't work - the function samples 8000 but of course still gets a list of just -40 ... how does
-	//  Flip do it - TODO try normal instead of gamma to see if it works as in the given Flip example (using normal)
-	/*plotSketchHistSplines(Seq(gammaOneSampleSketches.last), // drop the empty sketch at beginning
-		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
-		givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(List("blue gamma"))
-	)*/
+	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
+		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+	)
 
+
+	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
+
+	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
+			s"sketches)"),
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+	)
 
 	// NOTE TEMPORARY COMMENTING
 	plotSketchHistSplineWithDists(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning

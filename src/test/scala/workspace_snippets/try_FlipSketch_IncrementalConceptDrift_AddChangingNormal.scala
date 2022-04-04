@@ -32,14 +32,12 @@ import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRendere
 
 
 /**
- * TODO: check how update by one data point works here (just like in the original Flip example) - to see if i can
- * replicate the moving normal distribution thing to see if can apply the one-data-point update to GAMMA to make it
- * concept drift and not mixture like the other one turned out.
+ *
  */
 object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
-	// TODO start here tomorrow and run the below code in REPL to get dists that are not mean zero to get larger
-	//  thdraft starting point
+	// NOTE: these are the parameters that make the distributions spaced farther apart in the concept drift
+	//  illustration (forome reason; otherwise they are too close together .. TODO why?)
 	val dataNo = 10000 //1000 //500 //10000
 	// changed dataNo (was 1000)
 	val draftStart = 300 //100 //300
@@ -65,18 +63,6 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 		NormalDist(center(idxTime),10.0)
 
 
-	/*val (a1, b1) = (9, 33)
-	val (a2, b2) = (47, 49)
-	val (a3, b3) = (92, 26)
-	val (a4, b4) = (83, 13) // (168, 12) made this crash // good (93, 13)
-	val (a5, b5) = (90, 8)
-
-	// Declare the dists https://www.desmos.com/calculator/k5ukou5o1f
-	val greenGamma: GammaDist = GammaDist(a1, b1)
-	val redGamma: GammaDist = GammaDist(a2, b2)
-	val purpleGamma = GammaDist(a3, b3)
-	val orangeGamma = GammaDist(a4, b4)
-	val blueGamma = GammaDist(a5, b5)*/
 
 	// Instead of using the underlying-mean-generating method from Flip, simulating concept drift here by manually
 	// providing the differently-located gammas.
@@ -136,7 +122,7 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
 	)
 
 
@@ -145,14 +131,7 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
 			s"sketches)"),
-		graphToColorLabels = Some(normalDistsEveryTenth.map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
 	)
-	/*plotSketchHistSplineWithDists(normalMultiSampleSketches.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
-		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
-			.orange, HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDists.map(_.toString)),
-		originalDists = normalDists.map(_.asInstanceOf[Distr[Real, NormalDist]])
-	)*/
 
 }

@@ -234,7 +234,8 @@ object PlotSketch {
 	def getSketchHistSplines(sketches: Seq[Sketch[Double]],
 						 HOW_MANY: Option[Int] = Some(5),
 						 givenColorSeq: Option[Seq[Color]] = None,
-						 graphToColorLabels: Option[Seq[String]] = None): Seq[Plot] = {
+						 graphToColorLabels: Option[Seq[String]] = None,
+					    overlayWithMixtureFit: Boolean = false ): Seq[Plot] = {
 
 		// Create indexed list of sketches
 		val indexedSketches: Seq[(Int, Sketch[Double])] = sketches.indices.zip(sketches)
@@ -286,7 +287,69 @@ object PlotSketch {
 
 		val histsAndSplines: Seq[Plot] = sketchesWithPlots.flatMap{ case(_, _, hist, spline) => List(hist, spline) }
 
-		return histsAndSplines
+
+		// TODO abstractize and use the variable `overlayWithMixtureFit`
+		// HELP NOTE TEMPORARY including mixture model here with black line--------------------------------------
+		val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){sketches.last.samplePDF}
+
+		// Create the canonical mixture model (against which to compare to the estimated one at the end)
+		// TESTING 1: add same probability to all the gammas
+		// TESTING 2: add increasing probability to the ending gammas
+		// TODO fix the above implicit conversion function (mydist -> smiledist)
+		/*val a: Mixture.Component = new Mixture.Component(0.2, new GammaDistribution(greenGamma.shape, greenGamma.scale))*/
+		// TEMP hardcoded implementation just for the specific list of gammas i pass it
+		import util.ConvertMyDistToSmileDist._
+		val a: Mixture.Component = new Mixture.Component(0.2, originalDists(0).toSmileDist[GammaDistribution])
+		val b: Mixture.Component = new Mixture.Component(0.2, originalDists(1).toSmileDist[GammaDistribution])
+		val c: Mixture.Component = new Mixture.Component(0.2, originalDists(2).toSmileDist[GammaDistribution])
+		val d: Mixture.Component = new Mixture.Component(0.2, originalDists(3).toSmileDist[GammaDistribution])
+		val e: Mixture.Component = new Mixture.Component(0.2, originalDists(4).toSmileDist[GammaDistribution])
+		val canonicalMixture: Mixture = new Mixture(a, b, c, d, e)
+
+		// Estimate the mixture model
+		// TODO plot the ESTIMATED mixture model
+		val estimatedMixture = ExponentialFamilyMixture.fit(sampleDistData.toArray, a, b, c, d, e)
+
+		val canonPlot: Plot = FunctionPlot(
+			function = (x:Double) => canonicalMixture.p(x),
+			pathRenderer = Some(PathRenderer.default(
+				color = Some(HTMLNamedColors.black),
+				label = Text(msg = "Canonical mixture"),
+				strokeWidth = Some(5.0)
+			)),
+			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
+		)
+		val estMixPlot: Plot = FunctionPlot(
+			function = (x:Double) => estimatedMixture.p(x),
+			pathRenderer = Some(PathRenderer.default(
+				color = Some(HTMLNamedColors.chocolate),
+				label = Text(msg = "Estimated mixture"),
+				lineStyle = Some(LineStyle.Dashed),
+				strokeWidth = Some(7.0)
+			)),
+			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
+		)
+
+		// ---------------------------------------------------------------------------------------------
+
+		// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter
+		val plt: Drawable = Overlay((histSplineDensityPlots ++ List(canonPlot, estMixPlot)):_*)
+			/* Overlay(splines:_*).topLegend(labels = graphToColorLabels)
+			.overlay(hists:_*)*/
+			.xAxis()
+			.yAxis()
+			.xbounds(lower = xMIN, upper = xMAX)
+			.title(titleName.getOrElse(""))
+			.standard() //.frame()
+			.overlayLegend() // for name labels to appear
+			.xLabel("x")
+			.yLabel("y").render()//.frame().render()
+		/*.overlayLegend(x=0.8).*/
+
+		displayPlot(plt)
+
+
+		return histsAndSplines ++ List(canonPlot, estMixPlot)
 	}
 
 	// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter

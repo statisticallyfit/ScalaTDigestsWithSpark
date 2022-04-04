@@ -22,11 +22,18 @@ import util.distributionExtensions.syntax._
 
 import scala.reflect.runtime.universe._
 
+import util.ConvertMyDistToSmileDist._
+
+import flip.pdf.Sketch
+import flip.implicits._
 
 /**
  *
  */
 object PlotMixture {
+
+
+	//def getMixture(lastSketchPotentialMixture: Sketch[Double], )
 
 
 	/**
@@ -38,9 +45,9 @@ object PlotMixture {
 	 *                    parameters based off data, mirroring the canonical mixture object's parameters
 	 * @param kernelNonParamMix the estimated kernel density mixture object from data (non-parametric)
 	 */
-	def plotMixtureDist(sampleData: Array[Double], canonicalMixture: Mixture, estimatedMixture: Mixture,
-					kernelMixture: KernelDensity,
-					titleName: Option[String] = None): Unit = {
+	def plotMixtureTrueEstimated(sampleData: Array[Double], canonicalMixture: Mixture, estimatedMixture: Mixture,
+						    kernelMixture: KernelDensity,
+						    titleName: Option[String] = None): Unit = {
 
 		// generate data from canonical mixture:
 		val NUM_POINTS: Int = 2000
