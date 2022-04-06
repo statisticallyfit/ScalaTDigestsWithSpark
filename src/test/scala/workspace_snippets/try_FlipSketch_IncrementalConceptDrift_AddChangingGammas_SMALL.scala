@@ -96,19 +96,23 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	println(s"gammaOneSampleSketches.length = ${gammaOneSampleSketches.length}")
 	println(s"gammaMultiSampleSketches.length = ${gammaMultiSampleSketches.length}")
 
-	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
+	plotSketchHistSplines(gammaOneSampleSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: Gamma sketches "),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
+		originalDists = Some(gammasIncrementalMove),
+		overlayMixture = true
 	)
 
 
-	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
+	plotDensities(gammasIncrementalMove, HOW_MANY = Some(10))
 
-	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+	plotSketchHistSplines(gammaMultiSampleSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
 			s"sketches)"),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
+		originalDists = Some(gammasIncrementalMove),
+		overlayMixture = true
 	)
 
 	// NOTE TEMPORARY COMMENTING

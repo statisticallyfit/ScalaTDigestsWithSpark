@@ -93,7 +93,7 @@ object ConvertMyDistToSmileDist {
 
 
 
-		def toSmileDist_NOTYPE[S]: S = {
+		def toSmileAbsDist: AbstractDistribution = {
 			// Check conversion equivalent exists in Smile library
 			require(listOfAvailableSmileDists.map(s => s + "Dist").contains(distObj.getDist.getClass.getSimpleName))
 
@@ -110,45 +110,34 @@ object ConvertMyDistToSmileDist {
 				s"$accStr, $paramVal.asInstanceOf[$paramType]"
 			}}.drop(2) // to drop the first " ,"
 
-			// canonical name smile.stat.distribution.BinomialDistribution
-			val classPckgNameStr: String = typeOf[S].toString
+			// Create canonical name (e.g. smile.stat.distribution.BinomialDistribution)
+			// from my related class name (e.g. BinomialDist)
+			val classPckgNameStr: String = "smile.stat.distribution." + distObj.getDist.getClass.getSimpleName
 
 			val classStr: String = s"new $classPckgNameStr($argStr)"
 			// NOTE: must have 'new' since smile's class is not a case class
-			//tb.eval(tb.parse("new smile.stat.distribution.BinomialDistribution(10.asInstanceOf[Int], 0.4.asInstanceOf[Double])"))
+			//EXAMPLE:
+			// tb.eval(tb.parse("new smile.stat.distribution.BinomialDistribution(10.asInstanceOf[Int], 0.4.asInstanceOf[Double])"))
 			//res44: Any = Binomial Distribution(10, 0.4000)
 			val parsed: Tree = tb.parse(classStr)
-			val originalDist = tb.eval(parsed) //.asInstanceOf[S] //.asInstanceOf[Dist[T, D]]
+			val originalDist: Any = tb.eval(parsed) //.asInstanceOf[S] //.asInstanceOf[Dist[T, D]]
 
-			val obj: D = distObj.getDist
-			distObj.getDist.getClass.getSimpleName match {
-				case "PoissonDist" => {
-					val d = obj.asInstanceOf[PoissonDist]
-					new PoissonDistribution(d.lambda)
-				}
-				case "BinomialDist" => {
-					val d = obj.asInstanceOf[BinomialDist]
-					new BinomialDistribution(d.numTrials, d.p)
-				}
-				case "GeometricDist" => {
-					val d = obj.asInstanceOf[GeometricDist]
-					new GeometricDistribution(d.p)
-				}
-				case "GammaDist" => {
-					val d = obj.asInstanceOf[GammaDist]
-					new GammaDistribution(d.shape, d.scale)
-				}
-				case "NormalDist" => new GaussianDistribution(mu, std)
-				case "ExponentialDist" => new ExponentialDistribution(mean)
-				case "BetaDist" => new BetaDistribution(alphaShape, betaShape)
-				case "WeibullDist" => new WeibullDistribution(alphaShape, betaScale)
-				// TODO add the following in MY LIB:
+			// getSimpleName works to yield correct name for my Distr[T, D] objects
+			val originalDistAbstract: AbstractDistribution = distObj.getDist.getClass.getSimpleName match {
+				case "PoissonDist" => originalDist.asInstanceOf[PoissonDistribution]
+				case "BinomialDist" => originalDist.asInstanceOf[BinomialDistribution]
+				case "GeometricDist" => originalDist.asInstanceOf[GeometricDistribution]
+				case "GammaDist" => originalDist.asInstanceOf[GammaDistribution]
+				case "NormalDist" => originalDist.asInstanceOf[GaussianDistribution]
+				case "ExponentialDist" => originalDist.asInstanceOf[ExponentialDistribution]
+				case "BetaDist" => originalDist.asInstanceOf[BetaDistribution]
+				case "WeibullDist" => originalDist.asInstanceOf[WeibullDistribution]
+				// TODO add the following from Smile into MY LIB:
 				// Logistic | Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
-				// NOTE: getSimpleName works to yield correct name for my Distr[T, D] objects
+
 				case name => throw new Exception (s"No $name equivalent in Smile library")
 			}
-			// TODO match up arg names maybe through dict of mydist-names TO smiledist-names (snagit)
-			originalDist
+			originalDistAbstract
 		}
 
 		// D = my dist Distr[T, D]

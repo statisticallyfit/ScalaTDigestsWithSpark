@@ -14,7 +14,7 @@ import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRendere
 import com.manyangled.snowball.analysis.interpolation.MonotonicSplineInterpolator
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 
-import smile.stat.distribution.{KernelDensity, Mixture}
+import smile.stat.distribution._
 
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances._
@@ -22,6 +22,7 @@ import util.distributionExtensions.syntax._
 
 import scala.reflect.runtime.universe._
 
+import scala.language.implicitConversions
 import util.ConvertMyDistToSmileDist._
 
 import flip.pdf.Sketch
@@ -33,7 +34,71 @@ import flip.implicits._
 object PlotMixture {
 
 
-	//def getMixture(lastSketchPotentialMixture: Sketch[Double], )
+	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
+
+	/**
+	 *
+	 * @param lastSketchPotentialMixture = the last sketch generated from a group of sketches
+	 * @param originalDists = dists used to make the sketches (each sketch is found from estimating from the sampled
+	 *                      data from each dist)
+	 *
+	 * Rturn: the canonical and estimated mixture plot objects
+	 */
+	def getMixtureTrueEstimated[T, D](lastSketchPotentialMixture: Sketch[Double],
+					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, Distr[T, D]],
+											    evNum: Numeric[T]): (Plot, Plot) = {
+
+		val conceptDriftData: Array[Double] = Array.fill[Double](SAMPLE_SIZE){ lastSketchPotentialMixture.sample._2 }
+
+		// Create the canonical mixture model (against which to compare to the estimated one at the end)
+		// TESTING 1: add same probability to all the gammas
+		// TESTING 2: add increasing probability to the ending gammas
+
+		// Create a priori value (set equal probability to all dists)
+		val priori: Double = 1.0 / originalDists.length
+		val components: Seq[Mixture.Component] = originalDists.map(dist =>
+			new Mixture.Component(priori, dist.toSmileAbsDist)
+		)
+		val canonicalMixture: Mixture = new Mixture(components:_*)
+
+		// Estimate the mixture model
+		val sampleDistData: Seq[Double] = originalDists.flatMap(dst => dst.sample(SAMPLE_SIZE)).map(t => evNum.toDouble(t))
+
+		val estimatedMixture = ExponentialFamilyMixture.fit(
+			sampleDistData.toArray,
+			components:_*
+		)
+
+		// Plot the canonical mixture
+
+		val (xMIN, xMAX): (Double, Double) = (sampleDistData.min, sampleDistData.max)
+
+		val canonPlot: Plot = FunctionPlot(
+			function = (x:Double) => canonicalMixture.p(x),
+			pathRenderer = Some(PathRenderer.default(
+				color = Some(HTMLNamedColors.black),
+				label = Text(msg = "Canonical mixture"),
+				strokeWidth = Some(5.0)
+			)),
+			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
+		)
+
+		// Plot the estimated mixture
+		val estMixPlot: Plot = FunctionPlot(
+			function = (x:Double) => estimatedMixture.p(x),
+			pathRenderer = Some(PathRenderer.default(
+				color = Some(HTMLNamedColors.chocolate),
+				label = Text(msg = "Estimated mixture"),
+				lineStyle = Some(LineStyle.Dashed),
+				strokeWidth = Some(7.0)
+			)),
+			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
+		)
+
+		(canonPlot, estMixPlot)
+	}
+
+
 
 
 	/**
