@@ -96,32 +96,44 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends Ap
 	println(s"gammaOneSampleSketches.length = ${gammaOneSampleSketches.length}")
 	println(s"gammaMultiSampleSketches.length = ${gammaMultiSampleSketches.length}")
 
-	plotSketchHistSplines(gammaOneSampleSketches, //.drop(1), // drop the empty sketch at beginning
+
+	plotDensities(gammasIncrementalMove,
+		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
+			.orange, HTMLNamedColors.blue)),
+	)
+
+	// TODO debugging sampling problem from the one-sample gammas - why are all the sample points the same?  (-40?)
+	//  for the first one?
+	println("Printing the sample data for each sketch: ")
+	gammasIncrementalMove.zip(gammaOneSampleSketches).foreach{
+		case (g, skt) => println(s"${g.toString}: ${skt.samples(SAMPLE_SIZE)._2}")
+	}
+	/*plotSketchHistSplines(gammaOneSampleSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"One-single Sample: Gamma sketches "),
-		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
+		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
+			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
 		originalDists = Some(gammasIncrementalMove),
 		overlayMixture = true
-	)
-
-
-	plotDensities(gammasIncrementalMove, HOW_MANY = Some(10))
+	)*/
 
 	plotSketchHistSplines(gammaMultiSampleSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
 			s"sketches)"),
 		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
+		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
+			.orange, HTMLNamedColors.blue)),
 		originalDists = Some(gammasIncrementalMove),
 		overlayMixture = true
 	)
 
 	// NOTE TEMPORARY COMMENTING
-	plotSketchHistSplineWithDists(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning
+	/*plotSketchHistSplineWithDists(gammaMultiSampleSketches.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Sketches from Sample size = $SAMPLE_SIZE"),
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(List("green gamma", "red gamma", "purple gamma", "orange gamma", "blue gamma")),
 		originalDists = gammasIncrementalMove
-	)
+	)*/
 
 }

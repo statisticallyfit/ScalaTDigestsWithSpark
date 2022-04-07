@@ -28,6 +28,8 @@ import util.graph.PlotMixture._
  */
 object try_IsarnSketch_SmileMixtureFit_AddChangingGammas_SMALL extends App {
 
+	final val SAMPLE_SIZE: Int = 8000
+
 	/**
 	 * PARAMETRIC CASE:
 	 *

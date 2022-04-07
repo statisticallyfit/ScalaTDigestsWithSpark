@@ -7,7 +7,7 @@ package utilTest
  */
 
 object TestData {
-	final val SAMPLE_SIZE: Int = 10000
+	final val SAMPLE_SIZE_TEST: Int = 10000
 	final val SAMPLE_SIZE_LARGE: Int = 100000
 
 	// Number of times to combine the t-digests

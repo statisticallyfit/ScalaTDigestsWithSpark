@@ -119,19 +119,23 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	println(s"normalMultiEveryTenthSketches.length = ${normalMultiEveryTenthSketches.length}")
 
 
+
+	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
+
 	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
+		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		overlayMixture = true
 	)
-
-
-	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
 
 	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
 			s"sketches)"),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
+		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		overlayMixture = true
 	)
 
 }

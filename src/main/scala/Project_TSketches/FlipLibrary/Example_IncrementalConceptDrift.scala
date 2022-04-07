@@ -103,13 +103,6 @@ object Example_IncrementalConceptDrift extends App {
 	println(s"normalMultiEveryTenthSketches.length = ${normalMultiEveryTenthSketches.length}")
 
 
-	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"One-single Sample: (Flip's) Normal sketches Using Flip Center Drift (left out first " +
-			s"`draftNum` sketches)"),
-		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
-	)
-
 
 	// Just changing the flip objects to my object so that can pass to my plotting function
 	val flipNormalDists: List[flip.pdf.NormalDist[Double]] = normalDistsEveryTenth.map(nn => nn.asInstanceOf[flip.pdf.NormalDist[Double]])
@@ -117,10 +110,23 @@ object Example_IncrementalConceptDrift extends App {
 
 	plotDensities(myNormalDists, HOW_MANY = Some(10))
 
+
+	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: (Flip's) Normal sketches Using Flip Center Drift (left out first " +
+			s"`draftNum` sketches)"),
+		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
+		graphToColorLabels = Some(myNormalDists.drop(draftStart).map(_.toString)),
+		originalDists = Some(myNormalDists.drop(draftStart)),
+		overlayMixture = true
+	)
+
+
 	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: (Fli's) Normal Sketches, Sample size = $SAMPLE_SIZE (left out first" +
 			s" `draftNum` sketches)"),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString))
+		graphToColorLabels = Some(myNormalDists.drop(draftStart).map(_.toString)),
+		originalDists = Some(myNormalDists.drop(draftStart)),
+		overlayMixture = true
 	)
 
 

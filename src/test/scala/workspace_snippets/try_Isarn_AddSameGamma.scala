@@ -27,10 +27,10 @@ object try_Isarn_AddSameGamma extends App {
 	val distRightSkewStart = GammaDist(a1, b1)
 	val distLeftSkewShift = GammaDist(a2, b2)
 
-	val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE)
+	val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE_TEST)
 
 	val shiftData: Seq[Seq[Double]] = Seq.fill[Seq[Double]](1 + NUM_MONOIDAL_ADDITIONS)(
-		distLeftSkewShift.sample(SAMPLE_SIZE)
+		distLeftSkewShift.sample(SAMPLE_SIZE_TEST)
 	)
 
 	// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.
@@ -46,7 +46,7 @@ object try_Isarn_AddSameGamma extends App {
 
 
 	// see how convergence is at the last combination
-	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
+	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE_TEST){shiftedSketch.last.samplePDF}
 
 
 	val fit = GammaDistribution.fit(conceptDriftData)
@@ -66,7 +66,7 @@ object try_Isarn_AddSameGamma extends App {
 		.drop(1) // TODO look at algebird factory why erikerlandson drops 1 here
 
 	val td = TDigest.combine(startSketch, pureRightSketch.last)
-	val fitTD = GammaDistribution.fit(Array.fill[Double](SAMPLE_SIZE){td.samplePDF})
+	val fitTD = GammaDistribution.fit(Array.fill[Double](SAMPLE_SIZE_TEST){td.samplePDF})
 	val dist = GammaDist(fitTD.k, fitTD.theta)
 	println(s"mode of end = ${calcMode(dist)}")
 	println(s"gamma end: ${dist}")

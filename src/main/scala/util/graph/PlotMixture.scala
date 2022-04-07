@@ -31,10 +31,13 @@ import flip.implicits._
 /**
  *
  */
+object PlotMixtureData {
+	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
+}
+import PlotMixtureData._
+
 object PlotMixture {
 
-
-	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
 
 	/**
 	 *

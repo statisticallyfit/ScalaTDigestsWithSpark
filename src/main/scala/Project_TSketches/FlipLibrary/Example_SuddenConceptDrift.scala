@@ -30,28 +30,40 @@ object Example_SuddenConceptDrift extends App {
 	// note: variance was 1.0, changed by me to 10.0
 	def underlying(idx: Int) = NumericDist.normal(center(idx), 10.0, idx)
 
-	val datas = (1 to dataNo).map(idx => underlying(idx).sample._2).toList
-	val sketchTraces = sketch0 :: sketch0.updateTrace(datas)
-	val idxSketches = sketchTraces.indices.zip(sketchTraces).toList.filter { case (idx, _) => idx % 10 == 0 }
+	val normalDists = (1 to dataNo).map(idx => underlying(idx))
+	val datas = normalDists.map(_.sample._2).toList
+	val sketchTraces = (sketch0 :: sketch0.updateTrace(datas)).drop(1)
+
+	val normalDistsEveryTenth = normalDists.indices.zip(normalDists)
+		.filter {case (idx, _) => idx % 10 == 0}
+		.drop(1) // drop 1 to match the length of the sketches (not including the empty sketch)
+	val normalOneSketchEveryTenth = sketchTraces.indices.zip(sketchTraces)
+		.filter { case (idx, _) => idx % 10 == 0 }
+		.unzip._2
 	//val idxPdf = idxSketches.map { case (idx, sketch) => (idx, sketch.barPlot.csv) }
 	//val idxCdf = idxSketches.map { case (idx, sketch) => (idx, sketch.cdfSampling.csv) }
 
 
 	// TODO graph the moving hists with splines
-	println(datas.length)
-	println(idxSketches.length)
+	println(s"datas.length = ${datas.length}")
+	println(s"normalOneSketchEveryTenth.length = ${normalOneSketchEveryTenth.length}")
 
-	// NOTE: drop 1 to avoid the xMin < xMax 'not' error
-	plotSketchHistSplines(idxSketches.unzip._2.drop(1), HOW_MANY = Some(10))
+	/*plotSketchHistSplines(normalOneSketchEveryTenth, // drop the empty sketch at beginning
+		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (including draftStart)"),
+		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
+		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
+		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		overlayMixture = true
+	)*/
 
 
 	// TODO graph these measures as boxplots
-	val idxDel = idxSketches.map { case (idx, sketch) => (idx, Delta(underlying(idx), sketch).csv) }
-	val idxKld = idxSketches.map { case (idx, sketch) => (idx, KLD(underlying(idx), sketch)) }
-	val idxCos = idxSketches.map { case (idx, sketch) => (idx, Cosine(underlying(idx), sketch)) }
-	val idxEuc = idxSketches.map { case (idx, sketch) => (idx, Euclidean(underlying(idx), sketch)) }
-	val idxED = idxSketches.map { case (idx, sketch) => (idx, ED(underlying(idx), sketch)) }
-	val idxMedian = idxSketches.map { case (idx, sketch) => (idx, sketch.median) }
+	/*val idxDel = normalOneSketchEveryTenth.map { case (idx, sketch) => (idx, Delta(underlying(idx), sketch).csv) }
+	val idxKld = normalOneSketchEveryTenth.map { case (idx, sketch) => (idx, KLD(underlying(idx), sketch)) }
+	val idxCos = normalOneSketchEveryTenth.map { case (idx, sketch) => (idx, Cosine(underlying(idx), sketch)) }
+	val idxEuc = normalOneSketchEveryTenth.map { case (idx, sketch) => (idx, Euclidean(underlying(idx), sketch)) }
+	val idxED = normalOneSketchEveryTenth.map { case (idx, sketch) => (idx, ED(underlying(idx), sketch)) }
+	val idxMedian = normalOneSketchEveryTenth.map { case (idx, sketch) => (idx, sketch.median) }*/
 
 /*	ExpOutOps.clear(expName)
 	ExpOutOps.writeStrs(expName, "pdf", idxPdf)

@@ -232,8 +232,8 @@ object TestTools  {
 
 
 			// Create the t-digest sketches out of the distribution samples
-			val td1: TDigest = TDigest.sketch(dist1.sample(SAMPLE_SIZE), maxDiscrete = MAX_DISCRETE)
-			val td2: TDigest = TDigest.sketch(dist2.sample(SAMPLE_SIZE), maxDiscrete = MAX_DISCRETE)
+			val td1: TDigest = TDigest.sketch(dist1.sample(SAMPLE_SIZE_TEST), maxDiscrete = MAX_DISCRETE)
+			val td2: TDigest = TDigest.sketch(dist2.sample(SAMPLE_SIZE_TEST), maxDiscrete = MAX_DISCRETE)
 
 			import scala.math.{min, max}
 

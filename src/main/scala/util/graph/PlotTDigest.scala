@@ -25,14 +25,15 @@ import util.graph.PlotDensity._
 import scala.reflect.runtime.universe._
 
 
+object PlotTDigestData {
+	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
+}
+import PlotTDigestData._
+
 /**
  * These functions are related to plotting using Isarn's TDigest objects
  */
 object PlotTDigest {
-
-
-	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
-
 
 	// Show the spline from a sketch (no histogram, just simple spline)
 	def getSketchSpline(sketch: TDigest, splineColor: Color,

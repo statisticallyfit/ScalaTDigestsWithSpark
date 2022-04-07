@@ -33,10 +33,14 @@ import scala.reflect.runtime.universe._
  * These functinos are related to plotting involving Flip library's Sketch object
  */
 
-
-object PlotSketch {
+object PlotSketchData {
 
 	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
+
+}
+import PlotSketchData._
+
+object PlotSketch {
 
 
 	// Show the spline from a sketch (no histogram, just simple spline)
@@ -46,7 +50,6 @@ object PlotSketch {
 
 		// Logic to create the pdf spline (from Erik Erlandson)
 		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE)._2
-		//val sketch: TDigest = TDigest.sketch(rawdata)
 
 		val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
 		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }

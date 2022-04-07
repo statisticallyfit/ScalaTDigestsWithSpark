@@ -23,10 +23,12 @@ import scala.reflect.runtime.universe._
 /**
  *
  */
-object PlotDensity {
-
-
+object PlotDensityData {
 	final val SAMPLE_SIZE: Int = 8000 //50000 // fifty thousand
+}
+import PlotDensityData._
+
+object PlotDensity {
 
 
 	def getDensity[T: TypeTag, D](dist: Distr[T, D],

@@ -26,7 +26,7 @@ class CombineSameDistributionSpecs extends Specification {
 		"---> combine once" in {
 			//TEST_ID = (1, 'a')
 
-			val gammaData: Seq[Double] = GammaDist(2, 8).sample(SAMPLE_SIZE)
+			val gammaData: Seq[Double] = GammaDist(2, 8).sample(SAMPLE_SIZE_TEST)
 			//List.fill[Double](SAMPLE_SIZE){ GammaDist(2,8).sample }
 
 			val td1 = TDigest.sketch(gammaData, maxDiscrete = MAX_DISCRETE)
@@ -45,7 +45,7 @@ class CombineSameDistributionSpecs extends Specification {
 			val gammaDist: GammaDist = GammaDist(3, 9)
 
 			val data: Seq[Seq[Double]] = Seq.fill[Seq[Double]](1 + NUM_MONOIDAL_ADDITIONS)(
-				gammaDist.sample(SAMPLE_SIZE)
+				gammaDist.sample(SAMPLE_SIZE_TEST)
 			)
 
 			// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.
@@ -87,7 +87,7 @@ class CombineSameDistributionSpecs extends Specification {
 
 			// NOTE: the lower the mean parameter, the more right-skewed. As lambda -> infinity, poisson -> normal
 			//  (rule? check)
-			val poissonData: Seq[Int] = PoissonDist(2).sample(SAMPLE_SIZE)
+			val poissonData: Seq[Int] = PoissonDist(2).sample(SAMPLE_SIZE_TEST)
 			//List.fill[Double](SAMPLE_SIZE){ GammaDist(2,8).sample }
 
 			val td1 = TDigest.sketch(poissonData, maxDiscrete = MAX_DISCRETE)
@@ -105,7 +105,7 @@ class CombineSameDistributionSpecs extends Specification {
 			val poissonDist: PoissonDist = PoissonDist(1)
 
 			val data: Seq[Seq[Int]] = Seq.fill[Seq[Int]](1 + NUM_MONOIDAL_ADDITIONS)(
-				poissonDist.sample(SAMPLE_SIZE)
+				poissonDist.sample(SAMPLE_SIZE_TEST)
 			)
 
 			// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.

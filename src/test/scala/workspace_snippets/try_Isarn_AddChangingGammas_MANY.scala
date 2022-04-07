@@ -143,7 +143,7 @@ object try_Isarn_AddChangingGammas_MANY extends App {
 	// ----------------------------------------------------------------------
 
 	// NOTE: now here the NUM_MONOIDAL_ADDITIONS is replaced by shiftData.length
-	val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE))
+	val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE_TEST))
 	val firstTD: TDigest = TDigest.sketch(shiftData.head, maxDiscrete = MAX_DISCRETE)
 
 	// Creating the sketches and combining them:
@@ -154,7 +154,7 @@ object try_Isarn_AddChangingGammas_MANY extends App {
 
 
 	// see how convergence is at the last update (after combining the sketches from ALL the distributions)
-	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
+	val conceptDriftData = Array.fill[Double](SAMPLE_SIZE_TEST){shiftedSketch.last.samplePDF}
 
 
 	val fit: GammaDistribution = GammaDistribution.fit(conceptDriftData)

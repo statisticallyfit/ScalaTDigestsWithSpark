@@ -36,15 +36,15 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 			val distRightSkewStart = GammaDist(a1, b1)
 			val distLeftSkewShift = GammaDist(a2, b2)
 
-			val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE)
+			val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE_TEST)
 
-			val shiftDataOnce: Array[Double] = distLeftSkewShift.sample(SAMPLE_SIZE)
+			val shiftDataOnce: Array[Double] = distLeftSkewShift.sample(SAMPLE_SIZE_TEST)
 
 			val td1 = TDigest.sketch(startingData)
 			val td2 = TDigest.sketch(shiftDataOnce)
 
 			val combineOnce = TDigest.combine(td1, td2)
-			val combineOnceData = Array.fill[Double](SAMPLE_SIZE){combineOnce.samplePDF}
+			val combineOnceData = Array.fill[Double](SAMPLE_SIZE_TEST){combineOnce.samplePDF}
 
 			val fit: GammaDistribution = GammaDistribution.fit(combineOnceData)
 			val distCombineOnce: GammaDist = GammaDist(fit.k, fit.theta)
@@ -70,10 +70,10 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 			val distRightSkewStart = GammaDist(a1, b1)
 			val distLeftSkewShift = GammaDist(a2, b2)
 
-			val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE)
+			val startingData: Seq[Double] = distRightSkewStart.sample(SAMPLE_SIZE_TEST)
 
 			val shiftData: Seq[Seq[Double]] = Seq.fill[Seq[Double]](1 + NUM_MONOIDAL_ADDITIONS)(
-				distLeftSkewShift.sample(SAMPLE_SIZE)
+				distLeftSkewShift.sample(SAMPLE_SIZE_TEST)
 			)
 
 			// Computing the T-Digest sketches, cumulatively, keeping track of the previous ones.
@@ -89,7 +89,7 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 
 			// see how convergence is at the last combination
-			val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
+			val conceptDriftData = Array.fill[Double](SAMPLE_SIZE_TEST){shiftedSketch.last.samplePDF}
 
 
 			val fit = GammaDistribution.fit(conceptDriftData)
@@ -138,7 +138,7 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 
 			// NOTE: now here the NUM_MONOIDAL_ADDITIONS is replaced by shiftData.length
-			val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE))
+			val shiftData: Seq[Array[Double]] = gammasMovingRight.map(gdist => gdist.sample(SAMPLE_SIZE_TEST))
 
 			// Creating the sketches and combining them:
 			val shiftedSketch: Seq[TDigest] = shiftData
@@ -148,7 +148,7 @@ class CombineSameDistDiffParam_ConceptDriftSpecs extends Specification {
 
 
 			// see how convergence is at the last combination
-			val conceptDriftData = Array.fill[Double](SAMPLE_SIZE){shiftedSketch.last.samplePDF}
+			val conceptDriftData = Array.fill[Double](SAMPLE_SIZE_TEST){shiftedSketch.last.samplePDF}
 
 
 			val fit = GammaDistribution.fit(conceptDriftData)
