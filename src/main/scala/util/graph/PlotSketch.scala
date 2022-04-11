@@ -300,7 +300,7 @@ object PlotSketch {
 						HOW_MANY: Option[Int] = Some(5),
 						givenColorSeq: Option[Seq[Color]] = None,
 						graphToColorLabels: Option[Seq[String]] = None,
-						 overlayMixture: Boolean = false)(implicit evSamp: Sampling[T, Distr[T, D]]): Unit = {
+						 overlayMixture: Boolean = false)(implicit evSamp: Sampling[T, D]): Unit = {
 
 		// Get xbounds for the plot
 		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)
@@ -342,7 +342,7 @@ object PlotSketch {
 							 graphToColorLabels: Option[Seq[String]] = None,
 							 originalDists: Seq[Distr[T, D]])
 												  (implicit evProb: ProbabilityFunction[T, D],
-												   evSamp: Sampling[T, Distr[T, D]])
+												   evSamp: Sampling[T, D])
 	: Seq[Plot]= {
 
 		// Get first part of the plotting
@@ -380,7 +380,7 @@ object PlotSketch {
 												   graphToColorLabels: Option[Seq[String]] = None,
 												   originalDists: Seq[Distr[T, D]])
 												   (implicit evProb: ProbabilityFunction[T, D],
-												    evSamp: Sampling[T, Distr[T, D]]): Unit = {
+												    evSamp: Sampling[T, D]): Unit = {
 
 		// Get xbounds for the plot
 		//val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)

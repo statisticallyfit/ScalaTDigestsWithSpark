@@ -34,7 +34,7 @@ import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRendere
 /**
  *
  */
-object try_IsarnSketch_IncrementalConceptDrift_AddChangingGammas_SMALL extends App {
+object try_IsarnSketch_IncrConceptDrift_ChangingGammas_SMALL extends App {
 	val SAMPLE_SIZE = 8000 // was 1000
 
 	/**

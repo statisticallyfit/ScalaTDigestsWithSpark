@@ -33,7 +33,7 @@ object PlotDensity {
 
 	def getDensity[T: TypeTag, D](dist: Distr[T, D],
 							distColor: Color)(implicit evNum: Numeric[T],
-										   evSamp: Sampling[T, Distr[T, D]], // TODO change to T, D
+										   evSamp: Sampling[T, D], // TODO change to T, D
 										   evProb: ProbabilityFunction[T, D]): Plot	= {
 
 		val makeDensity: T => Double = x => dist.probabilityFunction(x)
@@ -65,7 +65,7 @@ object PlotDensity {
 							 titleName: Option[String] = None,
 							   HOW_MANY: Option[Int] = Some(5),
 							 givenColorSeq: Option[Seq[Color]] = None)(implicit evNum: Numeric[T],
-										    evSamp: Sampling[T, Distr[T, D]], // TODO change to T, D
+										    evSamp: Sampling[T, D], // TODO change to T, D
 										    evProb: ProbabilityFunction[T, D]): Unit = {
 
 		val indexedDists: Seq[(Int, Distr[T, D])] = dists.indices.zip(dists)

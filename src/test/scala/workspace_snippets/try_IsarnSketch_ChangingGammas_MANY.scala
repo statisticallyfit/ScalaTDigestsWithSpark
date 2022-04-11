@@ -15,7 +15,7 @@ import utilTest.TestTools.GeneralTools._
 /**
  *
  */
-object try_Isarn_AddChangingGammas_MANY extends App {
+object try_IsarnSketch_ChangingGammas_MANY extends App {
 
 	val bs = (10 to 100 by 10).map(_.toDouble).toList
 	// Li of modes that you want the distributions to have - this way, can calculate alphas out of betas and modes,

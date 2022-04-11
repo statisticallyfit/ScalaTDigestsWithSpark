@@ -9,8 +9,8 @@ import syntax._
  */
 object Tester {
 
-	def testUsage_CDFTATD[T: Numeric, D](x: T, distTD: Distr[T, D])(implicit ev1: CDF[T, Distr[T, D]],
-													    ev2: Sampling[T, Distr[T, D]]): Unit = {
+	def testUsage_CDFTATD[T: Numeric, D](x: T, distTD: Distr[T, D])(implicit ev1: CDF[T, D],
+													    ev2: Sampling[T, D]): Unit = {
 		//distAbs.absdistCDF(x)
 		println(distTD.toString)
 		println(distTD.cdf(x))

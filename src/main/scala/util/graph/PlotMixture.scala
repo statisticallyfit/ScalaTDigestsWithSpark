@@ -48,7 +48,7 @@ object PlotMixture {
 	 * Rturn: the canonical and estimated mixture plot objects
 	 */
 	def getMixtureTrueEstimated[T, D](lastSketchPotentialMixture: Sketch[Double],
-					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, Distr[T, D]],
+					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, D],
 											    evNum: Numeric[T]): (Plot, Plot) = {
 
 		val conceptDriftData: Array[Double] = Array.fill[Double](SAMPLE_SIZE){ lastSketchPotentialMixture.sample._2 }
@@ -81,7 +81,7 @@ object PlotMixture {
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(HTMLNamedColors.black),
 				label = Text(msg = "Canonical mixture"),
-				strokeWidth = Some(5.0)
+				strokeWidth = Some(4.0)
 			)),
 			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
 		)
@@ -90,10 +90,10 @@ object PlotMixture {
 		val estMixPlot: Plot = FunctionPlot(
 			function = (x:Double) => estimatedMixture.p(x),
 			pathRenderer = Some(PathRenderer.default(
-				color = Some(HTMLNamedColors.chocolate),
+				color = Some(HTMLNamedColors.cyan),
 				label = Text(msg = "Estimated mixture"),
 				lineStyle = Some(LineStyle.Dashed),
-				strokeWidth = Some(7.0)
+				strokeWidth = Some(5.0)
 			)),
 			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
 		)

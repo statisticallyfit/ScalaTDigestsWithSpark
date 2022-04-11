@@ -325,7 +325,7 @@ object PlotTDigest {
 												   graphToColorLabels: Option[Seq[String]] = None,
 												   originalDists: Seq[Distr[T, D]])
 												  (implicit evProb: ProbabilityFunction[T, D],
-												   evSamp: Sampling[T, Distr[T, D]])
+												   evSamp: Sampling[T, D])
 	: Seq[Plot]= {
 
 		// Get first part of the plotting
@@ -364,7 +364,7 @@ object PlotTDigest {
 												    originalDists: Seq[Distr[T, D]],
 												    overlayWithMixtureFit: Boolean = false)
 												   (implicit evProb: ProbabilityFunction[T, D],
-												    evSamp: Sampling[T, Distr[T, D]]): Unit = {
+												    evSamp: Sampling[T, D]): Unit = {
 
 		// Get xbounds for the plot
 		//val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)

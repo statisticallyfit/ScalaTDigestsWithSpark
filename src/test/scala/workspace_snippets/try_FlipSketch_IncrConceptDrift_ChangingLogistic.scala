@@ -15,7 +15,8 @@ import scala.language.higherKinds
 
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances.AllInstances._ //otherwise cannot find implicit value for evProb, evSamp
-//import util.distributionExtensions.syntax._
+import util.distributionExtensions.instances._
+import util.distributionExtensions.syntax._
 
 
 // TEMPORARY PLOT IMPORTS
@@ -34,7 +35,7 @@ import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRendere
 /**
  *
  */
-object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
+object try_FlipSketch_IncrConceptDrift_ChangingLogistic extends App {
 
 	// NOTE: these are the parameters that make the distributions spaced farther apart in the concept drift
 	//  illustration (forome reason; otherwise they are too close together .. TODO why?)
@@ -59,8 +60,7 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	// def center(idx: Int): Double = if (draftStart > idx) draftStartingPoint else draftStartingPoint + velocity * (idx - draftStart)
 
 	//def underlying(idx: Int): NumericDist[Double] = NumericDist.normal(center(idx), 10.0, idx)
-	def underlying(idxTime: Int)/*(implicit evSmp: Sampling[Double, Distr[Double, NormalDist]])*/: NormalDist =
-		NormalDist(center(idxTime),10.0)
+	def underlying(idxTime: Int): LogisticDist = LogisticDist(mu = center(idxTime), scale = 2.0)
 
 
 
@@ -68,14 +68,14 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	// providing the differently-located gammas.
 	//val gammasIncrementalMove: Seq[GammaDist] = List(greenGamma, redGamma, purpleGamma, orangeGamma, blueGamma)
 	/*val smpNorm = implicitly[Sampling[Double, Distr[Double, NormalDist]]]*/
-	val normalDists: List[NormalDist] = (0 to dataNo).toList.map(idxTime => underlying(idxTime))
-	val normalDistsEveryTenth: List[NormalDist] = normalDists.drop(draftStart).indices.zip(normalDists.drop(draftStart))
+	val logisticDists: List[LogisticDist] = (0 to dataNo).toList.map(idxTime => underlying(idxTime))
+	val logisticDistsEveryTenth: List[LogisticDist] = logisticDists.drop(draftStart).indices.zip(logisticDists.drop(draftStart))
 		.filter{ case (idx, _) => idx	% 10 == 0}.unzip._2.toList
 
-	val normalOneSampleData: List[Double] = normalDists.map(_.sample)
-	val normalMultiSampleData: List[List[Double]] = normalDists.map(_.sample(SAMPLE_SIZE).toList).toList
+	val logisticOneSampleData: List[Double] = logisticDists.map(_.sample)
+	val logisticMultiSampleData: List[List[Double]] = logisticDists.map(_.sample(SAMPLE_SIZE).toList).toList
 
-	//val (xMIN, xMAX) = (normalMultiSampleData.flatten.min, normalMultiSampleData.flatten.max)
+
 
 	implicit val conf: SketchConf = SketchConf(
 		cmapStart = Some(-40.0),
@@ -89,17 +89,17 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 
 
 	// Creating the sketches and combining them:
-	val normalOneSampleSketches: Seq[Sketch[Double]] = (sketch0 :: sketch0.updateTrace(normalOneSampleData))
+	val logisticOneSampleSketches: Seq[Sketch[Double]] = (sketch0 :: sketch0.updateTrace(logisticOneSampleData))
 		.drop(draftStart) // drop the ones with  mean == 0
-	val normalOneEveryTenthSketches = normalOneSampleSketches.indices.zip(normalOneSampleSketches)
+	val logisticOneEveryTenthSketches = logisticOneSampleSketches.indices.zip(logisticOneSampleSketches)
 		.filter{ case(idx, _) => idx % 10 == 0}
 		.unzip._2
-		//.drop(draftStart) // drop the ones with mean == 0
+	//.drop(draftStart) // drop the ones with mean == 0
 
 	// Contains list of incrementally updated sketches - so last one contains all information from previous ones.
-	val normalMultiSampleSketches: Seq[Sketch[Double]] = (sketch00 :: sketch00.updateWithMany(normalMultiSampleData))
+	val logisticMultiSampleSketches: Seq[Sketch[Double]] = (sketch00 :: sketch00.updateWithMany(logisticMultiSampleData))
 		.drop(draftStart) // drop the ones with mean == 0
-	val normalMultiEveryTenthSketches = normalMultiSampleSketches.indices.zip(normalMultiSampleSketches)
+	val logisticMultiEveryTenthSketches = logisticMultiSampleSketches.indices.zip(logisticMultiSampleSketches)
 		.filter{ case(idx, _) => idx % 10 == 0}
 		.unzip._2
 
@@ -114,27 +114,27 @@ object try_FlipSketch_IncrementalConceptDrift_AddChangingNormal extends App {
 	//  < xMax
 	//plotHistSplineFromSketches(gammaOneSampleSketches.drop(2), titleName = Some("Sketches from sample size = 1"))
 
-	println(s"normalDistsEveryTenth.length = ${normalDistsEveryTenth.length}")
-	println(s"normalOneEveryTenthSketches.length = ${normalOneEveryTenthSketches.length}")
-	println(s"normalMultiEveryTenthSketches.length = ${normalMultiEveryTenthSketches.length}")
+	println(s"logisticDistsEveryTenth.length = ${logisticDistsEveryTenth.length}")
+	println(s"logisticOneEveryTenthSketches.length = ${logisticOneEveryTenthSketches.length}")
+	println(s"logisticMultiEveryTenthSketches.length = ${logisticMultiEveryTenthSketches.length}")
 
 
 
-	plotDensities(normalDistsEveryTenth, HOW_MANY = Some(10))
+	plotDensities(logisticDistsEveryTenth, HOW_MANY = Some(10))
 
-	plotSketchHistSplines(normalOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+	plotSketchHistSplines(logisticOneEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
-		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		graphToColorLabels = Some(logisticDistsEveryTenth.drop(draftStart).map(_.toString)),
+		originalDists = Some(logisticDistsEveryTenth.drop(draftStart)),
 		overlayMixture = true
 	)
 
-	plotSketchHistSplines(normalMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
+	plotSketchHistSplines(logisticMultiEveryTenthSketches, //.drop(1), // drop the empty sketch at beginning
 		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
 			s"sketches)"),
-		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
-		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		graphToColorLabels = Some(logisticDistsEveryTenth.drop(draftStart).map(_.toString)),
+		originalDists = Some(logisticDistsEveryTenth.drop(draftStart)),
 		overlayMixture = true
 	)
 

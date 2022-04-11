@@ -126,8 +126,8 @@ object TestTools  {
 		// NOTE: same as isarn-sketches `testSamplingPDF` and `testSamplingPMF` = https://github.com/isarn/isarn-sketches/blob/develop/src/test/scala/org/isarnproject/sketches/TDigestTest.scala#L51-L70
 
 		def kolmogorovSmirnovSampleD[T: Numeric : TypeTag, D](tdgst: TDigest, dist: Distr[T, D])
-												   (implicit evCdf: CDF[T, Distr[T, D]],
-												    evSmp: Sampling[T, Distr[T, D]]): Double = {
+												   (implicit evCdf: CDF[T, D],
+												    evSmp: Sampling[T, D]): Double = {
 
 			// Sample from the t-digest sketch of this distribution
 			val tdSamples: Array[Double] = typeOf[T].toString contains "Int" match { // Int or IntZ
@@ -160,7 +160,7 @@ object TestTools  {
 												 dist: Distr[T, D],
 												 //testID: (Int, Char) = TEST_ID,
 												 n: Int = 10000)
-												(implicit evCdf: CDF[T, Distr[T, D]]): Double = {
+												(implicit evCdf: CDF[T, D]): Double = {
 			require(tdgst.nclusters > 1) // size == num clusters //require(tdgst.size() > 1)
 			require(n > 0)
 
@@ -203,8 +203,8 @@ object TestTools  {
 		}
 
 		def kolmogorovSmirnovD[T: Numeric : TypeTag, D](tdgst: TDigest, dist: Distr[T, D])
-											  (implicit evCdf: CDF[T, Distr[T, D]],
-											   evSmp: Sampling[T, Distr[T, D]]): (Double, Double) = {
+											  (implicit evCdf: CDF[T, D],
+											   evSmp: Sampling[T, D]): (Double, Double) = {
 
 			val ksdCdf = kolmogorovSmirnovCdfD(tdgst, dist)
 			val ksdSample = kolmogorovSmirnovSampleD(tdgst, dist)
@@ -225,8 +225,8 @@ object TestTools  {
 		//  order to see which cdf is "underneath" or "above" the other (if result < 0, then cdfA < cdfB, else if result
 		//  > 0 then cdfA > cdfB) and we can thus tell which one is "shifted" left or right, respectively
 		def cdfSignTest[T: Numeric : TypeTag, D](dist1: Distr[T, D], dist2: Distr[T, D], n: Int = 10000)
-										(implicit evCdf: CDF[T, Distr[T, D]],
-										 smpl: Sampling[T, Distr[T, D]]): Double = {
+										(implicit evCdf: CDF[T, D],
+										 smpl: Sampling[T, D]): Double = {
 			// TODO require(tdgst.nclusters > 1) // size == num clusters //require(tdgst.size() > 1)
 			require(n > 0)
 

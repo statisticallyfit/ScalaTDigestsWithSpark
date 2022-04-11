@@ -81,4 +81,9 @@ object GeneralUtil {
 			}
 		}).asInstanceOf[Seq[T]]
 	}
+
+
+	def indexOfFirstDifferentNum(lst: Seq[Double]): Int = {
+		lst.zip(lst.drop(1) ++ lst.tail).indexWhere{case (a,b) => a != b} + 1
+	}
 }

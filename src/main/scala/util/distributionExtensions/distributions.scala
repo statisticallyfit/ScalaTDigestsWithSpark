@@ -8,7 +8,7 @@ package util.distributionExtensions
 
 import org.apache.commons.math3.distribution.{BetaDistribution, BinomialDistribution, ExponentialDistribution,
 	WeibullDistribution, GammaDistribution, GeometricDistribution, GumbelDistribution, NormalDistribution,
-	PoissonDistribution, UniformRealDistribution}
+	PoissonDistribution, UniformRealDistribution, LogisticDistribution}
 
 
 /**
@@ -43,22 +43,35 @@ object distributions {
 	}
 	case class BinomialDist(numTrials: Int, p: Double) extends BinomialDistribution(numTrials, p)
 		with DiscreteDist[BinomialDist] { def getDist: BinomialDist = this }
+
 	case class GeometricDist(p: Double) extends GeometricDistribution(p)
 		with DiscreteDist[GeometricDist] { def getDist: GeometricDist = this }
 
+
+	// ------------------------------------------------------------------------------------------------------------------------
+
 	case class GammaDist(shape: Double, scale: Double) extends GammaDistribution(shape, scale)
 		with ContinuousDist[GammaDist] { def getDist: GammaDist = this }
+
 	case class NormalDist(mu: Double, std: Double) extends NormalDistribution(mu, std)
 		with ContinuousDist[NormalDist] { def getDist: NormalDist = this }
+
 	case class ContinuousUniformDist(a: Double, b: Double) extends UniformRealDistribution(a, b)
 		with ContinuousDist[ContinuousUniformDist] { def getDist: ContinuousUniformDist = this }
+
 	case class GumbelDist(mu: Double, beta: Double) extends GumbelDistribution(mu, beta)
 		with ContinuousDist[GumbelDist] { def getDist: GumbelDist = this }
+
 	case class ExponentialDist(mean: Double) extends ExponentialDistribution(mean)
 		with ContinuousDist[ExponentialDist] { def getDist: ExponentialDist = this }
+
 	case class BetaDist(alphaShape: Double, betaShape: Double) extends BetaDistribution(alphaShape, betaShape)
 		with ContinuousDist[BetaDist] {def getDist: BetaDist = this }
+
 	case class WeibullDist(alphaShape: Double, betaScale: Double) extends WeibullDistribution(alphaShape, betaScale)
 		with ContinuousDist[WeibullDistribution] {def getDist: WeibullDistribution = this }
+
+	case class LogisticDist(mu: Double, scale: Double) extends LogisticDistribution(mu, scale)
+		with ContinuousDist[LogisticDist] { def getDist: LogisticDist = this }
 
 }

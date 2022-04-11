@@ -53,7 +53,8 @@ object ConvertMyDistToSmileDist {
 
 	implicit class ToSmileDist[T: Numeric, D](distObj: Distr[T, D]) {
 
-		val listOfAvailableSmileDists: Seq[String] = List("Bernoulli", "Beta", "Binomial", "ChiSquare", "Exponential", "F", "T", "Gamma", "Gaussian", "Normal", "Geometric", "HyperGeometric", "Logistic", "LogNormal", "Poisson", "Weibull")
+		val listOfAvailableSmileDists: List[String] = List("Bernoulli", "Beta", "Binomial", "ChiSquare",
+			"Exponential", "F", "T", "Gamma", "Gaussian", "Normal", "Geometric", "HyperGeometric", "Logistic", "LogNormal", "Poisson", "Weibull")
 
 		//val helperMyDistStringToSmileDist: Map[String]
 		/*type S = smile.stat.distribution.type
@@ -80,8 +81,9 @@ object ConvertMyDistToSmileDist {
 				case ExponentialDist(mean) => new ExponentialDistribution(mean)
 				case BetaDist(alphaShape, betaShape) => new BetaDistribution(alphaShape, betaShape)
 				case WeibullDist(alphaShape, betaScale) => new WeibullDistribution(alphaShape, betaScale)
+				case LogisticDist(mu, shape) => new LogisticDistribution(mu, shape)
 				// TODO add the following in MY LIB:
-				// Logistic | Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
+				//  Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
 				// TODO NONE case ContinuousUniformDist(a, b) => new
 				// NOTE: getSimpleName works to yield correct name for my Distr[T, D] objects
 				case obj => throw new Exception (s"No ${obj.getClass.getSimpleName} equivalent in Smile library")
@@ -112,14 +114,18 @@ object ConvertMyDistToSmileDist {
 
 			// Create canonical name (e.g. smile.stat.distribution.BinomialDistribution)
 			// from my related class name (e.g. BinomialDist)
-			val classPckgNameStr: String = "smile.stat.distribution." + distObj.getDist.getClass.getSimpleName
+			// EXAMPLE: "smile.stat.distribution." + "Gamma" + "Distribution"
+			val myDistClassNameStr: String = distObj.getDist.getClass.getSimpleName
+			val smileDistClassNameStr: String = listOfAvailableSmileDists.filter(dstr => myDistClassNameStr.contains(dstr)).head +
+				"Distribution"
+			val classPckgNameStr: String = "smile.stat.distribution." + smileDistClassNameStr
 
-			val classStr: String = s"new $classPckgNameStr($argStr)"
+			val classObjCreationStr: String = s"new $classPckgNameStr($argStr)"
 			// NOTE: must have 'new' since smile's class is not a case class
 			//EXAMPLE:
 			// tb.eval(tb.parse("new smile.stat.distribution.BinomialDistribution(10.asInstanceOf[Int], 0.4.asInstanceOf[Double])"))
 			//res44: Any = Binomial Distribution(10, 0.4000)
-			val parsed: Tree = tb.parse(classStr)
+			val parsed: Tree = tb.parse(classObjCreationStr)
 			val originalDist: Any = tb.eval(parsed) //.asInstanceOf[S] //.asInstanceOf[Dist[T, D]]
 
 			// getSimpleName works to yield correct name for my Distr[T, D] objects
@@ -132,8 +138,9 @@ object ConvertMyDistToSmileDist {
 				case "ExponentialDist" => originalDist.asInstanceOf[ExponentialDistribution]
 				case "BetaDist" => originalDist.asInstanceOf[BetaDistribution]
 				case "WeibullDist" => originalDist.asInstanceOf[WeibullDistribution]
+				case "LogisticDist" => originalDist.asInstanceOf[LogisticDistribution]
 				// TODO add the following from Smile into MY LIB:
-				// Logistic | Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
+				// | Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
 
 				case name => throw new Exception (s"No $name equivalent in Smile library")
 			}

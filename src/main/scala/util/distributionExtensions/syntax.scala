@@ -10,18 +10,18 @@ object syntax {
 	// TODO try to make all the types work with syntax -- DiscrDist[D] as well as Dist[T, D] -- why not working?
 	//  Need to put P[_,_] kind of thing?
 
-	implicit class CDFSyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: CDF[T, Distr[T, D]]){
+	implicit class CDFSyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: CDF[T, D]){
 
-		def cdf(x: T): Double = ev.cumProb(distTD, x)
+		def cdf(x: T): Double = ev.cumProb(distTD.getDist, x)
 
-		def inverseCdf(p: Double): T = ev.invCumProb(distTD, p)
+		def inverseCdf(p: Double): T = ev.invCumProb(distTD.getDist, p)
 	}
 
 
-	implicit class DiscreteCDFSyntax[D](distpd: DiscreteDist[D])(implicit ev: CDF[IntZ, DiscreteDist[D]]){
+	implicit class DiscreteCDFSyntax[D](distTD: DiscreteDist[D])(implicit ev: CDF[IntZ, DiscreteDist[D]]){
 
-		def cdf(x: IntZ): Double = ev.cumProb(distpd, x)
-		def inverseCdf(p: Double): IntZ = ev.invCumProb(distpd, p)
+		def cdf(x: IntZ): Double = ev.cumProb(distTD, x)
+		def inverseCdf(p: Double): IntZ = ev.invCumProb(distTD, p)
 	}
 
 	/*implicit class DiscreteCDFSyntax[T: Numeric, D, P[_] <: Dist[T, D]](distpd: P[D])(implicit ev: CDF[T, P[D]]){
@@ -38,10 +38,10 @@ object syntax {
 		def inverseCdf(p: Double): Real = ev.invCumProb(distTD, p)
 	}
 
-	implicit class SamplingSyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: Sampling[T, Distr[T, D]]){
+	implicit class SamplingSyntax[T: Numeric, D](distTD: Distr[T, D])(implicit ev: Sampling[T, D/*Distr[T, D]*/]){
 
-		def sample(n: Int): Seq[T] = ev.sampleDist(distTD, n)
-		def sample: T = ev.sampleDist(distTD, 1).head
+		def sample(n: Int): Seq[T] = ev.sampleDist(distTD.getDist, n)
+		def sample: T = ev.sampleDist(distTD.getDist, 1).head
 
 	}
 
