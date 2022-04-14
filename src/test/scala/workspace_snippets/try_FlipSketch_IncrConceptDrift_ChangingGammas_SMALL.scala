@@ -174,7 +174,7 @@ object try_FlipSketch_IncrConceptDrift_ChangingGammas_SMALL extends App {
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
-		originalDists = Some(gammasIncrementalMove),
+		originalDists = gammasIncrementalMove,
 		overlayMixture = true
 	)
 
@@ -186,10 +186,10 @@ object try_FlipSketch_IncrConceptDrift_ChangingGammas_SMALL extends App {
 	lastGammaSet.zip(colors).zip(labels).zip(gammasIncrementalMove)
 		.map{ case (((skt, c), lab), gdist) =>
 			plotSketchHistSplines(List(skt),
-				titleName = Some(s"One Sample: Gamma Sketch Individual (Reps: In Order"),
+				titleName = Some(s"One Sample: Gamma Sketch Individual (Reps: In Order)"),
 				givenColorSeq = Some(List(c)),
 				graphToColorLabels = Some(List(lab)),
-				originalDists = Some(gammasIncrementalMove),
+				originalDists = gammasIncrementalMove,
 				overlayMixture = true
 	)}
 
@@ -198,18 +198,17 @@ object try_FlipSketch_IncrConceptDrift_ChangingGammas_SMALL extends App {
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
 		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
-		originalDists = Some(gammasIncrementalMove),
+		originalDists = gammasIncrementalMove,
 		overlayMixture = true
 	)
 
 
 	plotSketchHistSplines(gammaMultiSampleSketches, //.drop(1), // drop the empty sketch at beginning
-		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
-			s"sketches)"),
+		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE"),
 		graphToColorLabels = Some(gammasIncrementalMove.map(_.toString)),
 		givenColorSeq = Some(List(HTMLNamedColors.green, HTMLNamedColors.red, HTMLNamedColors.purple, HTMLNamedColors
 			.orange, HTMLNamedColors.blue)),
-		originalDists = Some(gammasIncrementalMove),
+		originalDists = gammasIncrementalMove,
 		overlayMixture = true
 	)
 

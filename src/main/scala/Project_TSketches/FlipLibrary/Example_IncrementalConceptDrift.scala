@@ -116,7 +116,7 @@ object Example_IncrementalConceptDrift extends App {
 			s"`draftNum` sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
 		graphToColorLabels = Some(myNormalDists.drop(draftStart).map(_.toString)),
-		originalDists = Some(myNormalDists.drop(draftStart)),
+		originalDists = myNormalDists.drop(draftStart),
 		overlayMixture = true
 	)
 
@@ -125,7 +125,7 @@ object Example_IncrementalConceptDrift extends App {
 		titleName = Some(s"Multi-batch samples: (Fli's) Normal Sketches, Sample size = $SAMPLE_SIZE (left out first" +
 			s" `draftNum` sketches)"),
 		graphToColorLabels = Some(myNormalDists.drop(draftStart).map(_.toString)),
-		originalDists = Some(myNormalDists.drop(draftStart)),
+		originalDists = myNormalDists.drop(draftStart),
 		overlayMixture = true
 	)
 

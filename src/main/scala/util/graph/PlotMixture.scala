@@ -10,12 +10,9 @@ import com.cibo.evilplot.numeric.{Bounds, Point}
 import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import com.cibo.evilplot.plot.renderers.{BarRenderer, PathRenderer, PointRenderer}
-
 import com.manyangled.snowball.analysis.interpolation.MonotonicSplineInterpolator
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
-
 import smile.stat.distribution._
-
 import util.distributionExtensions.distributions._
 import util.distributionExtensions.instances._
 import util.distributionExtensions.syntax._
@@ -24,9 +21,9 @@ import scala.reflect.runtime.universe._
 
 import scala.language.implicitConversions
 import util.ConvertMyDistToSmileDist._
-
 import flip.pdf.Sketch
 import flip.implicits._
+import util.graph.SetPlotBounds.getXBounds
 
 /**
  *
@@ -47,7 +44,7 @@ object PlotMixture {
 	 *
 	 * Rturn: the canonical and estimated mixture plot objects
 	 */
-	def getMixtureTrueEstimated[T, D](lastSketchPotentialMixture: Sketch[Double],
+	def getMixtureTrueEstimated[T: TypeTag, D](lastSketchPotentialMixture: Sketch[Double],
 					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, D],
 											    evNum: Numeric[T]): (Plot, Plot) = {
 
@@ -74,7 +71,11 @@ object PlotMixture {
 
 		// Plot the canonical mixture
 
-		val (xMIN, xMAX): (Double, Double) = (sampleDistData.min, sampleDistData.max)
+		// Just choose any of the dists because they are the same type and have the same support
+		// TODO update later when having many different dists with different support bounds  - need to pass a seq
+		//  of dists and get a min / max of their lower/upper bound supports.
+		val (xMIN, xMAX): (Double, Double) = getXBounds(originalDists)// (sampleData.min, sampleData.max)
+
 
 		val canonPlot: Plot = FunctionPlot(
 			function = (x:Double) => canonicalMixture.p(x),
@@ -93,10 +94,12 @@ object PlotMixture {
 				color = Some(HTMLNamedColors.cyan),
 				label = Text(msg = "Estimated mixture"),
 				lineStyle = Some(LineStyle.Dashed),
-				strokeWidth = Some(5.0)
+				strokeWidth = Some(2.0)
 			)),
 			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
 		)
+
+		println(s"\nfrom getMixtureTrueEstimated: getXBounds => ${(xMIN, xMAX)}")
 
 		(canonPlot, estMixPlot)
 	}

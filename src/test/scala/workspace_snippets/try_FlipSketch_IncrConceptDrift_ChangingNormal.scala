@@ -126,7 +126,7 @@ object try_FlipSketch_IncrConceptDrift_ChangingNormal extends App {
 		titleName = Some(s"One-single Sample: Normal sketches Using Flip Center Drift (left out first 100 sketches)"),
 		//givenColorSeq = Some(List(HTMLNamedColors.blue)),
 		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
-		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		originalDists = normalDistsEveryTenth.drop(draftStart),
 		overlayMixture = true
 	)
 
@@ -134,7 +134,7 @@ object try_FlipSketch_IncrConceptDrift_ChangingNormal extends App {
 		titleName = Some(s"Multi-batch samples: Sketches from Sample size = $SAMPLE_SIZE (left out first 100 " +
 			s"sketches)"),
 		graphToColorLabels = Some(normalDistsEveryTenth.drop(draftStart).map(_.toString)),
-		originalDists = Some(normalDistsEveryTenth.drop(draftStart)),
+		originalDists = normalDistsEveryTenth.drop(draftStart),
 		overlayMixture = true
 	)
 

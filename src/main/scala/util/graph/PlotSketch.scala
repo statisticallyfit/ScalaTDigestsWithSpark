@@ -17,6 +17,7 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 import flip.implicits._
 import flip.pdf.Sketch
 
+import org.apache.commons.math3.distribution.{IntegerDistribution, RealDistribution}
 import smile.stat.distribution.{KernelDensity, Mixture}
 
 import util.distributionExtensions.distributions._
@@ -24,6 +25,7 @@ import util.distributionExtensions.instances._
 import util.distributionExtensions.syntax._
 
 import util.graph.PlotDensity._
+import util.graph.SetPlotBounds.getXBounds
 
 import scala.reflect.runtime.universe._
 
@@ -294,26 +296,31 @@ object PlotSketch {
 	}
 
 	// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter
-	def plotSketchHistSplines[T: Numeric, D](sketches: Seq[Sketch[Double]],
-						 originalDists: Option[Seq[Distr[T, D]]] = None,
+	def plotSketchHistSplines[T: TypeTag , D](sketches: Seq[Sketch[Double]],
+						 originalDists: Seq[Distr[T, D]],
 						titleName: Option[String] = None,
 						HOW_MANY: Option[Int] = Some(5),
 						givenColorSeq: Option[Seq[Color]] = None,
 						graphToColorLabels: Option[Seq[String]] = None,
-						 overlayMixture: Boolean = false)(implicit evSamp: Sampling[T, D]): Unit = {
+						 overlayMixture: Boolean = false)(implicit evSamp: Sampling[T, D],
+												    evNum: Numeric[T]): Unit = {
 
 		// Get xbounds for the plot
 		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)
-		val (xMIN, xMAX): (Double, Double) = (sampleData.min, sampleData.max)
+
+
+		val (xMIN, xMAX): (Double, Double) = getXBounds(originalDists)
+
+		println(s"\nfrom plotSketchHistSplines: getXBounds => ${(xMIN, xMAX)}")
 
 		val histsAndSplines: Seq[Plot] = getSketchHistSplines(sketches, HOW_MANY, givenColorSeq,
 			graphToColorLabels)
 
 		import util.graph.PlotMixture._
 
-		val mixtures: List[Plot] = overlayMixture && originalDists.isDefined match {
+		val mixtures: List[Plot] = overlayMixture match {
 			case true => {
-				val (canonPlot, estPlot) = getMixtureTrueEstimated(sketches.last, originalDists.get)
+				val (canonPlot, estPlot) = getMixtureTrueEstimated(sketches.last, originalDists)
 				List(canonPlot, estPlot)
 			}
 			case false => List[Plot]()
