@@ -46,7 +46,7 @@ object PlotMixture {
 	 */
 	def getMixtureTrueEstimated[T: TypeTag, D](lastSketchPotentialMixture: Sketch[Double],
 					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, D],
-											    evNum: Numeric[T]): (Plot, Plot) = {
+											    evNum: Numeric[T]): (Plot, Option[Plot]) = {
 
 		val conceptDriftData: Array[Double] = Array.fill[Double](SAMPLE_SIZE){ lastSketchPotentialMixture.sample._2 }
 
@@ -62,12 +62,18 @@ object PlotMixture {
 		val canonicalMixture: Mixture = new Mixture(components:_*)
 
 		// Estimate the mixture model
-		val sampleDistData: Seq[Double] = originalDists.flatMap(dst => dst.sample(SAMPLE_SIZE)).map(t => evNum.toDouble(t))
+		/*val sampleDistData: Seq[Double] = originalDists.flatMap(dst => dst.sample(SAMPLE_SIZE)).map(t => evNum
+			.toDouble(t))
 
+		// TODO error here - must check if the dists type indeed implement the exponentialfamily in smile lib -- or
+		//  do cach error when casting to expfamily
+		//components(i) = (components(i).distribution.asInstanceOf[ExponentialFamily]).M(x, posteriori(i))
+		// then if error just keep the canonicalmixt only and dont fit the estinate
+		// return type (plot, option[plot])
 		val estimatedMixture = ExponentialFamilyMixture.fit(
 			sampleDistData.toArray,
 			components:_*
-		)
+		)*/
 
 		// Plot the canonical mixture
 
@@ -82,13 +88,13 @@ object PlotMixture {
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(HTMLNamedColors.black),
 				label = Text(msg = "Canonical mixture"),
-				strokeWidth = Some(4.0)
+				strokeWidth = Some(3.0)
 			)),
 			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
 		)
 
 		// Plot the estimated mixture
-		val estMixPlot: Plot = FunctionPlot(
+		/*val estMixPlot: Plot = FunctionPlot(
 			function = (x:Double) => estimatedMixture.p(x),
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(HTMLNamedColors.cyan),
@@ -97,11 +103,12 @@ object PlotMixture {
 				strokeWidth = Some(2.0)
 			)),
 			xbounds = Some(Bounds(xMIN, xMAX)) // NOTE necessary to include x bounds or graphs WON'T appear
-		)
+		)*/
 
 		println(s"\nfrom getMixtureTrueEstimated: getXBounds => ${(xMIN, xMAX)}")
 
-		(canonPlot, estMixPlot)
+		//(canonPlot, estMixPlot)
+		(canonPlot, None)
 	}
 
 

@@ -69,7 +69,7 @@ object distributions {
 		with ContinuousDist[BetaDist] {def getDist: BetaDist = this }
 
 	case class WeibullDist(alphaShape: Double, betaScale: Double) extends WeibullDistribution(alphaShape, betaScale)
-		with ContinuousDist[WeibullDistribution] {def getDist: WeibullDistribution = this }
+		with ContinuousDist[WeibullDist] {def getDist: WeibullDist = this }
 
 	case class LogisticDist(mu: Double, scale: Double) extends LogisticDistribution(mu, scale)
 		with ContinuousDist[LogisticDist] { def getDist: LogisticDist = this }

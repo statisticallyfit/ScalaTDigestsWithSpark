@@ -320,8 +320,10 @@ object PlotSketch {
 
 		val mixtures: List[Plot] = overlayMixture match {
 			case true => {
-				val (canonPlot, estPlot) = getMixtureTrueEstimated(sketches.last, originalDists)
-				List(canonPlot, estPlot)
+				getMixtureTrueEstimated(sketches.last, originalDists) match {
+					case (cp, None) => List(cp)
+					case (cp, Some(ep)) => List(cp, ep)
+				}
 			}
 			case false => List[Plot]()
 		}

@@ -308,12 +308,12 @@ object instances {
 	}
 
 
-	trait DiscreteCDFInstances extends PoissonInstances
+	trait DiscreteInstances extends PoissonInstances
 		with GeometricInstances
 		with BinomialInstances
 
 
-	trait ContinuousCDFInstances extends NormalInstances
+	trait ContinuousInstances extends NormalInstances
 		with GammaInstances
 		with ContinuousUniformInstances
 		with GumbelInstances
@@ -322,5 +322,5 @@ object instances {
 		with ExponentialInstances
 		with WeibullInstances
 
-	object AllInstances extends DiscreteCDFInstances with ContinuousCDFInstances
+	object AllInstances extends DiscreteInstances with ContinuousInstances
 }
