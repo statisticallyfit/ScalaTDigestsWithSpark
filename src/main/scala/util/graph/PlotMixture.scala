@@ -42,13 +42,14 @@ object PlotMixture {
 	 * @param originalDists = dists used to make the sketches (each sketch is found from estimating from the sampled
 	 *                      data from each dist)
 	 *
-	 * Rturn: the canonical and estimated mixture plot objects
+	 * Return: the canonical and estimated mixture plot objects
 	 */
-	def getMixtureTrueEstimated[T: TypeTag, D](lastSketchPotentialMixture: Sketch[Double],
+	def getMixtureTrueEstimated[T: TypeTag, D](lastSketchPotentialMixture: Sketch[T],
 					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, D],
 											    evNum: Numeric[T]): (Plot, Option[Plot]) = {
 
-		val conceptDriftData: Array[Double] = Array.fill[Double](SAMPLE_SIZE){ lastSketchPotentialMixture.sample._2 }
+		//val conceptDriftData: Array[Double] = Array.fill[Double](SAMPLE_SIZE){ lastSketchPotentialMixture.sample
+		// ._2 }
 
 		// Create the canonical mixture model (against which to compare to the estimated one at the end)
 		// TESTING 1: add same probability to all the gammas
@@ -123,14 +124,15 @@ object PlotMixture {
 	 *                    parameters based off data, mirroring the canonical mixture object's parameters
 	 * @param kernelNonParamMix the estimated kernel density mixture object from data (non-parametric)
 	 */
-	def plotMixtureTrueEstimated(sampleData: Array[Double], canonicalMixture: Mixture, estimatedMixture: Mixture,
+	def plotMixtureTrueEstimated[T: TypeTag](sampleData: Array[T], canonicalMixture: Mixture,
+								 estimatedMixture: Mixture,
 						    kernelMixture: KernelDensity,
-						    titleName: Option[String] = None): Unit = {
+						    titleName: Option[String] = None)(implicit evNum: Numeric[T]): Unit = {
 
 		// generate data from canonical mixture:
 		val NUM_POINTS: Int = 2000
 
-		val (xMIN, xMAX): (Int, Int) = (sampleData.min.toInt, sampleData.max.toInt)
+		val (xMIN, xMAX): (Int, Int) = (evNum.toInt(sampleData.min), evNum.toInt(sampleData.max))
 		println(s"xmin, xmax = $xMIN, $xMAX")
 
 		// Create histogram of data (from sample)
@@ -140,7 +142,7 @@ object PlotMixture {
 			binningFunction = Histogram.density,
 			xbounds = Some(Bounds(xMIN, xMAX)) // find the xbounds
 		)
-		val histPlot: Plot = plotHistData(sampleData)
+		val histPlot: Plot = plotHistData(sampleData.map(d => evNum.toDouble(d)))
 
 		// Create the density estimates
 		val colors: Seq[Color] = Color.getGradientSeq(3) // for the three probs lists above

@@ -17,6 +17,10 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 import flip.implicits._
 import flip.pdf.Sketch
 
+// Measure so that T -> Double and vice versa
+import flip.measure._
+import util.TMeasure._
+
 import org.apache.commons.math3.distribution.{IntegerDistribution, RealDistribution}
 import smile.stat.distribution.{KernelDensity, Mixture}
 
@@ -46,15 +50,15 @@ object PlotSketch {
 
 
 	// Show the spline from a sketch (no histogram, just simple spline)
-	def getSketchSpline(sketch: Sketch[Double], splineColor: Color,
+	def getSketchSpline[T: TypeTag](sketch: Sketch[T], splineColor: Color,
 					dotted: Boolean = false,
-					label: Option[String] = None): Plot = {
+					label: Option[String] = None)(implicit evNum: Numeric[T]): Plot = {
 
 		// Logic to create the pdf spline (from Erik Erlandson)
-		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE)._2
+		val sampleData: List[Double] = sketch.samples(SAMPLE_SIZE)._2.map(x => evNum.toDouble(x))
 
 		val ydata: Array[Double] = (0.0 until 1.0 by 0.01).toArray :+ 1.0
-		val xdata: Array[Double] = ydata.map { y => sketch.icdf(y) }
+		val xdata: Array[Double] = ydata.map { y => evNum.toDouble( sketch.icdf(y) ) }
 		val (xmin, xmax) = (sampleData.min, sampleData.max)
 		println(s"From getSketchSpline: printing (xmin, xmax) = ($xmin, $xmax)")
 
@@ -110,20 +114,25 @@ object PlotSketch {
 		splineplot
 	}
 
-	def getSpline(sampleData: Seq[Double], splineColor: Color,
+
+
+
+	def getSpline[T: TypeTag: Numeric](sampleData: Seq[T], splineColor: Color,
 			    dotted: Boolean = false,
 			    label: Option[String] = None): Plot	= {
 
 		// NOTE: need to generate a sketch here in order to calculaet from the inverse cdf, the xdata
-		val emptySketch = Sketch.empty[Double]
-		val sketch = sampleData.foldLeft(emptySketch) {
+		val emptySketch = Sketch.empty[T]
+		val sketch: Sketch[T] = sampleData.foldLeft(emptySketch) {
 			case (sketch, sampleValue) => sketch.update(sampleValue)
 		}
 
 		getSketchSpline(sketch, splineColor, dotted, label)
 	}
 
-	def getHist(data: Seq[Double], histColor: Color, label: Option[String] = None): Plot = {
+	def getHist[T: TypeTag](data: Seq[T],
+					    histColor: Color,
+					    label: Option[String] = None)(implicit evNum: Numeric[T]): Plot = {
 
 		val makeHist: Seq[Double] => Plot = data => Histogram(
 			data,
@@ -134,14 +143,16 @@ object PlotSketch {
 			xbounds = Some(Bounds(data.min, data.max)) // find the xbounds
 		)
 
-		makeHist(data)
+		makeHist(data.map(d => evNum.toDouble(d)))
 	}
 
 	// plot histogram from the sketch (one single one)
-	def getSketchHist(sketch: Sketch[Double], histColor: Color, label: Option[String] = None): Plot = {
+	def getSketchHist[T: TypeTag: Numeric](sketch: Sketch[T],
+								    histColor: Color,
+								    label: Option[String] = None): Plot = {
 
 		// Create the sample data from the sketch for the histogram
-		val rawData: List[Double] = sketch.samples(SAMPLE_SIZE)._2
+		val rawData: List[T] = sketch.samples(SAMPLE_SIZE)._2
 
 		getHist(rawData, histColor, label)
 	}
@@ -171,7 +182,7 @@ object PlotSketch {
 		displayPlot(overlayPlot)
 	}*/
 
-	def plotHistSplineFromTimeData(timeData: Seq[(Int, Seq[Double])],
+	def plotHistSplineFromTimeData[T: TypeTag: Numeric](timeData: Seq[(Int, Seq[T])],
 							 titleName: Option[String] = None,
 							 HOW_MANY: Option[Int] = Some(10),
 							 dotted: Boolean = false,
@@ -193,7 +204,7 @@ object PlotSketch {
 		val BLACK = HTMLNamedColors.black
 
 		// Get samples each sketch in order to create the splines / hists
-		val samplesWithPlots: Seq[(Int, Seq[Double], Plot, Plot)] = shorterIndexedSamples
+		val samplesWithPlots: Seq[(Int, Seq[T], Plot, Plot)] = shorterIndexedSamples
 			.drop(1) // to avoid the xmin not < xmax error
 			.map{ case (idx, samp) =>
 				(idx, samp, getHist(samp, BLACK, label), getSpline(samp, BLACK, dotted))
@@ -219,14 +230,14 @@ object PlotSketch {
 	}
 
 
-	def plotHistSplineFromData(datas: Seq[Seq[Double]],
+	def plotHistSplineFromData[T: TypeTag: Numeric](datas: Seq[Seq[T]],
 						  titleName: Option[String] = None,
 						  HOW_MANY: Option[Int] = Some(10),
 						  dotted: Boolean = false, //TODO move the non-option arg to be before all the other
 						  // option-args
 						  label: Option[String] = None): Any = {
 
-		val indexedSamples: Seq[(Int, Seq[Double])] = datas.indices.zip(datas)
+		val indexedSamples: Seq[(Int, Seq[T])] = datas.indices.zip(datas)
 
 		plotHistSplineFromTimeData(indexedSamples, titleName, HOW_MANY, dotted, label)
 	}
@@ -236,13 +247,13 @@ object PlotSketch {
 
 
 
-	def getSketchHistSplines(sketches: Seq[Sketch[Double]],
+	def getSketchHistSplines[T: TypeTag: Numeric](sketches: Seq[Sketch[T]],
 						 HOW_MANY: Option[Int] = Some(5),
 						 givenColorSeq: Option[Seq[Color]] = None,
 						 graphToColorLabels: Option[Seq[String]] = None): Seq[Plot] = {
 
 		// Create indexed list of sketches
-		val indexedSketches: Seq[(Int, Sketch[Double])] = sketches.indices.zip(sketches)
+		val indexedSketches: Seq[(Int, Sketch[T])] = sketches.indices.zip(sketches)
 
 		// Select just few for plotting (max 5 for now)
 		val howManyToShow: Int = HOW_MANY.isDefined match {
@@ -272,7 +283,7 @@ object PlotSketch {
 		val isDotted: Boolean = true // if(originalDists.isDefined) true else false
 
 		// Get samples each sketch in order to create the splines / hists
-		val sketchesWithPlots: Seq[(Int, Sketch[Double], Plot, Plot)] = graphToColorLabels.isDefined match {
+		val sketchesWithPlots: Seq[(Int, Sketch[T], Plot, Plot)] = graphToColorLabels.isDefined match {
 			case true => shorterIndexedSketches
 				.zip(colorSeq)
 				.zip(graphToColorLabels.get)
@@ -296,7 +307,7 @@ object PlotSketch {
 	}
 
 	// TODO do fold starting with overlay of splines and legend then .overlay of each hist thereafter
-	def plotSketchHistSplines[T: TypeTag , D](sketches: Seq[Sketch[Double]],
+	def plotSketchHistSplines[T: TypeTag , D](sketches: Seq[Sketch[T]],
 						 originalDists: Seq[Distr[T, D]],
 						titleName: Option[String] = None,
 						HOW_MANY: Option[Int] = Some(5),
@@ -304,10 +315,6 @@ object PlotSketch {
 						graphToColorLabels: Option[Seq[String]] = None,
 						 overlayMixture: Boolean = false)(implicit evSamp: Sampling[T, D],
 												    evNum: Numeric[T]): Unit = {
-
-		// Get xbounds for the plot
-		val sampleData: Seq[Double] = sketches.flatMap(_.samples(SAMPLE_SIZE)._2)
-
 
 		val (xMIN, xMAX): (Double, Double) = getXBounds(originalDists)
 
@@ -345,7 +352,7 @@ object PlotSketch {
 	// TODO make a general version contaiining the boilerplate code common toboth, returning just the plot object
 	//  before all the drawable and display business, and let that get returned in THIS ONE with original dists arg,
 	//  so you can have the original dists logic separately, and combine the two overlayplots separately
-	def getSketchHistSplineWithDists[T: TypeTag : Numeric, D](sketches: Seq[Sketch[Double]],
+	def getSketchHistSplineWithDists[T: TypeTag : Numeric, D](sketches: Seq[Sketch[T]],
 							 HOW_MANY: Option[Int] = Some(5),
 							 givenColorSeq: Option[Seq[Color]] = None,
 							 graphToColorLabels: Option[Seq[String]] = None,
@@ -382,7 +389,7 @@ object PlotSketch {
 		histsAndSplines ++ densities
 	}
 
-	def plotSketchHistSplineWithDists[T: TypeTag : Numeric, D](sketches: Seq[Sketch[Double]],
+	def plotSketchHistSplineWithDists[T: TypeTag : Numeric, D](sketches: Seq[Sketch[T]],
 												   titleName: Option[String] = None,
 												   HOW_MANY: Option[Int] = Some(5),
 												   givenColorSeq: Option[Seq[Color]] = None,

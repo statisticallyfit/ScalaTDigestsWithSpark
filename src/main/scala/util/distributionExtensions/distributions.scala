@@ -6,9 +6,7 @@ package util.distributionExtensions
 
 
 
-import org.apache.commons.math3.distribution.{BetaDistribution, BinomialDistribution, ExponentialDistribution,
-	WeibullDistribution, GammaDistribution, GeometricDistribution, GumbelDistribution, NormalDistribution,
-	PoissonDistribution, UniformRealDistribution, LogisticDistribution}
+import org.apache.commons.math3.distribution.{BetaDistribution, BinomialDistribution, ChiSquaredDistribution, ExponentialDistribution, FDistribution, GammaDistribution, GeometricDistribution, GumbelDistribution, LogisticDistribution, NormalDistribution, PoissonDistribution, UniformRealDistribution, WeibullDistribution}
 
 
 /**
@@ -73,5 +71,11 @@ object distributions {
 
 	case class LogisticDist(mu: Double, scale: Double) extends LogisticDistribution(mu, scale)
 		with ContinuousDist[LogisticDist] { def getDist: LogisticDist = this }
+	//new smile.stat.distribution.WeibullDistribution
 
+	case class ChiSquareDist(df: Int) extends ChiSquaredDistribution(df)
+		with ContinuousDist[ChiSquareDist] { def getDist: ChiSquareDist = this }
+
+	case class FDist(numeratorDf: Int, denominatorDf: Int) extends FDistribution(numeratorDf, denominatorDf)
+		with ContinuousDist[FDist] { def getDist: FDist = this }
 }

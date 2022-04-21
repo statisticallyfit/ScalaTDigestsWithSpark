@@ -307,6 +307,30 @@ object instances {
 			}
 	}
 
+	trait ChiSquaredInstances {
+		implicit def chiSquaredHasProbability: ProbabilityFunction[Real, ChiSquareDist] =
+			new ProbabilityFunction[Real, ChiSquareDist] {
+				def prob(d: ChiSquareDist, x: Real): Double = d.density(x.doubleValue())
+				// TODO prob or density here?? d.probability(x.doubleValue())
+			}
+
+		implicit def chiSquaredDistHasCDF: CDF[Real, ChiSquareDist] = new CDF[Real, ChiSquareDist] {
+
+			def cumProb(d: ChiSquareDist, x: Real): Double = {
+				d.cumulativeProbability(x.doubleValue())
+			}
+			def invCumProb(d: ChiSquareDist, p: Double): Real = {
+				d.inverseCumulativeProbability(p)
+			}
+		}
+		implicit def chiSquaredDistCanBeSampled: Sampling[Real, ChiSquareDist] =
+			new Sampling[Real, ChiSquareDist]{
+
+				def sampleDist(d: ChiSquareDist, n: Int): Seq[Real] =
+					d.sample(n).map(BigDecimal(_))
+			}
+	}
+
 
 	trait DiscreteInstances extends PoissonInstances
 		with GeometricInstances
@@ -321,6 +345,7 @@ object instances {
 		with BetaInstances
 		with ExponentialInstances
 		with WeibullInstances
+		with ChiSquaredInstances
 
 	object AllInstances extends DiscreteInstances with ContinuousInstances
 }

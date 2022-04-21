@@ -71,7 +71,7 @@ object ConvertMyDistToSmileDist {
 		}*/
 
 
-		def manualMyDistToSmileDist[T: Numeric, D](distObj: Distr[T, D]): smile.stat.distribution.Distribution = {
+		/*def manualMyDistToSmileDist[T: Numeric, D](distObj: Distr[T, D]): smile.stat.distribution.Distribution = {
 			distObj.getDist match {
 				case PoissonDist(lambda) => new PoissonDistribution(lambda)
 				case BinomialDist(numTrials, p) => new BinomialDistribution(numTrials, p)
@@ -82,13 +82,10 @@ object ConvertMyDistToSmileDist {
 				case BetaDist(alphaShape, betaShape) => new BetaDistribution(alphaShape, betaShape)
 				case WeibullDist(alphaShape, betaScale) => new WeibullDistribution(alphaShape, betaScale)
 				case LogisticDist(mu, shape) => new LogisticDistribution(mu, shape)
-				// TODO add the following in MY LIB:
-				//  Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
-				// TODO NONE case ContinuousUniformDist(a, b) => new
 				// NOTE: getSimpleName works to yield correct name for my Distr[T, D] objects
 				case obj => throw new Exception (s"No ${obj.getClass.getSimpleName} equivalent in Smile library")
 			}
-		}
+		}*/
 
 
 
@@ -139,8 +136,9 @@ object ConvertMyDistToSmileDist {
 				case "BetaDist" => originalDist.asInstanceOf[BetaDistribution]
 				case "WeibullDist" => originalDist.asInstanceOf[WeibullDistribution]
 				case "LogisticDist" => originalDist.asInstanceOf[LogisticDistribution]
+				case "ChiSquareDist" => originalDist.asInstanceOf[ChiSquareDistribution]
 				// TODO add the following from Smile into MY LIB:
-				// | Lognormal | F |  T | ChiSquare | Bernoulli | Hypergeometric | NegativeBinomial
+				// | Bernoulli | Hypergeometric | NegativeBinomial
 
 				case name => throw new Exception (s"No $name equivalent in Smile library")
 			}
