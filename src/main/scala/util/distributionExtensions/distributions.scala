@@ -29,7 +29,7 @@ object distributions {
 	trait Sampling[T, D] {
 		def sampleDist(d: D, n: Int): Seq[T]
 	}
-	trait Distr[T, D] /*extends CDF[T, AbsDist[T, D]]*/{
+	trait Distr[T, D] /*extends CDF[T, AbsDist[T, D]]*/{ self =>
 		def getDist: D
 	}
 	trait ContinuousDist[D] extends Distr[Real, D]

@@ -51,7 +51,7 @@ object ConvertMyDistToSmileDist {
 	import scala.language.higherKinds
 	import scala.language.implicitConversions
 
-	implicit class ToSmileDist[T: Numeric, D](distObj: Distr[T, D]) {
+	implicit class ToSmileDist[T: TypeTag: Numeric, D](distObj: Distr[T, D]) {
 
 		val listOfAvailableSmileDists: List[String] = List("Bernoulli", "Beta", "Binomial", "ChiSquare",
 			"Exponential", "F", "T", "Gamma", "Gaussian", "Normal", "Geometric", "HyperGeometric", "Logistic", "LogNormal", "Poisson", "Weibull")
@@ -94,7 +94,7 @@ object ConvertMyDistToSmileDist {
 
 		def toSmileAbsDist: AbstractDistribution = {
 			// Check conversion equivalent exists in Smile library
-			require(listOfAvailableSmileDists.map(s => s + "Dist").contains(distObj.getDist.getClass.getSimpleName))
+			require(listOfAvailableSmileDists.map(s => s + "Dist").contains(distObj./*getDist.*/getClass.getSimpleName))
 
 
 			import scala.reflect.runtime._
@@ -112,7 +112,7 @@ object ConvertMyDistToSmileDist {
 			// Create canonical name (e.g. smile.stat.distribution.BinomialDistribution)
 			// from my related class name (e.g. BinomialDist)
 			// EXAMPLE: "smile.stat.distribution." + "Gamma" + "Distribution"
-			val myDistClassNameStr: String = distObj.getDist.getClass.getSimpleName
+			val myDistClassNameStr: String = distObj./*getDist.*/getClass.getSimpleName
 			val smileDistClassNameStr: String = listOfAvailableSmileDists.filter(dstr => myDistClassNameStr.contains(dstr)).head +
 				"Distribution"
 			val classPckgNameStr: String = "smile.stat.distribution." + smileDistClassNameStr

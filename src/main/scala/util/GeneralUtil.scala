@@ -49,8 +49,8 @@ object GeneralUtil {
 
 	def numToT[T: TypeTag](num: Double)(implicit evNum: Numeric[T]): T = {
 		typeOf[T].toString.split('.').last match {
-			case "IntZ" => BigInt(num.toInt).asInstanceOf[T]
-			case "Real" => BigDecimal.valueOf(num).asInstanceOf[T]
+			case "IntZ" | "Int" => BigInt(num.toInt).asInstanceOf[T]
+			case "Real" | "Double" => BigDecimal.valueOf(num).asInstanceOf[T]
 		}
 	}
 
@@ -86,4 +86,7 @@ object GeneralUtil {
 	def indexOfFirstDifferentNum(lst: Seq[Double]): Int = {
 		lst.zip(lst.drop(1) ++ lst.tail).indexWhere{case (a,b) => a != b} + 1
 	}
+
+	//works for getting string name of IntZ, BigInt, Int , ...
+	def inspect[T: TypeTag]: String = typeOf[T].toString.split('.').last
 }

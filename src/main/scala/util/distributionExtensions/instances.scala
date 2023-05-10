@@ -7,7 +7,6 @@ import distributions._
 object instances {
 
 	trait PoissonInstances {
-
 		implicit def poissonHasProbability: ProbabilityFunction[IntZ, PoissonDist] =
 			new ProbabilityFunction[IntZ, PoissonDist] {
 				def prob(d: PoissonDist, x: IntZ): Double = d.probability(x.intValue())

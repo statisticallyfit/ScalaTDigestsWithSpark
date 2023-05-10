@@ -4,8 +4,10 @@ package workspace_snippets
 
 import com.cibo.evilplot.colors.{Color, HTMLNamedColors}
 
+
 import flip.implicits._
 import flip.pdf.Sketch
+import util.TMeasure._
 
 import util.graph.PlotSketch._
 import util.graph.PlotDensity._
@@ -183,7 +185,7 @@ object try_FlipSketch_IncrConceptDrift_ChangingChiSquared_SMALL extends App {
 	}")*/
 
 
-	plotSketchHistSplines[Double, ChiSquareDist](chiSquaredOneSampleSketches,
+	plotSketchHistSplines(chiSquaredOneSampleSketches,
 		titleName = Some(s"One-single Sample: ChiSquared sketches (No Reps)"),
 		givenColorSeq = Some(chiSquaredColors),
 		graphToColorLabels = Some(chiSquaredsIncrementalMove.map(_.toString)),

@@ -4,8 +4,10 @@ package workspace_snippets
 
 import com.cibo.evilplot.colors.{Color, HTMLNamedColors}
 
+
 import flip.implicits._
 import flip.pdf.Sketch
+import util.TMeasure._
 
 import util.graph.PlotSketch._
 import util.graph.PlotDensity._

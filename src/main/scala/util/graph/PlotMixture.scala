@@ -18,11 +18,11 @@ import util.distributionExtensions.instances._
 import util.distributionExtensions.syntax._
 
 import scala.reflect.runtime.universe._
-
 import scala.language.implicitConversions
 import util.ConvertMyDistToSmileDist._
 import flip.pdf.Sketch
 import flip.implicits._
+import util.GeneralUtil.inspect
 import util.graph.SetPlotBounds.getXBounds
 
 /**
@@ -44,10 +44,10 @@ object PlotMixture {
 	 *
 	 * Return: the canonical and estimated mixture plot objects
 	 */
-	def getMixtureTrueEstimated[T: TypeTag, D](lastSketchPotentialMixture: Sketch[T],
+	def getMixtureTrueEstimated[T: TypeTag, P: TypeTag, D](lastSketchPotentialMixture: Sketch[P],
 					 originalDists: Seq[Distr[T, D]])(implicit evSamp: Sampling[T, D],
 											    evNum: Numeric[T]): (Plot, Option[Plot]) = {
-
+		require(inspect[T].contains(inspect[P])) // "IntZ" contains work "Int"
 		//val conceptDriftData: Array[Double] = Array.fill[Double](SAMPLE_SIZE){ lastSketchPotentialMixture.sample
 		// ._2 }
 
@@ -55,9 +55,10 @@ object PlotMixture {
 		// TESTING 1: add same probability to all the gammas
 		// TESTING 2: add increasing probability to the ending gammas
 
+
 		// Create a priori value (set equal probability to all dists)
 		val priori: Double = 1.0 / originalDists.length
-		val components: Seq[Mixture.Component] = originalDists.map(dist =>
+		val components: Seq[Mixture.Component] = originalDists.map((dist: Distr[T, D]) =>
 			new Mixture.Component(priori, dist.toSmileAbsDist)
 		)
 		val canonicalMixture: Mixture = new Mixture(components:_*)
@@ -81,11 +82,16 @@ object PlotMixture {
 		// Just choose any of the dists because they are the same type and have the same support
 		// TODO update later when having many different dists with different support bounds  - need to pass a seq
 		//  of dists and get a min / max of their lower/upper bound supports.
-		val (xMIN, xMAX): (Double, Double) = getXBounds(originalDists)// (sampleData.min, sampleData.max)
+		val (xMIN, xMAX): (Double, Double) = getXBounds[T, D](originalDists)// (sampleData.min, sampleData.max)
 
-
+		// NOTE must make the FunctionPlot take f: Double -> Double but prob(x) must be prob(x: T) to suit the
+		//  type-sensitive canonicalMixture
+		// x: Double --> prob(
+		import util.GeneralUtil.numToT
+		
 		val canonPlot: Plot = FunctionPlot(
-			function = (x:Double) => canonicalMixture.p(x),
+			function = (x:Double) => canonicalMixture.p( x.toInt ), // TODO but then too many reps 1.1, 1.3, ...
+			// all 1
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(HTMLNamedColors.black),
 				label = Text(msg = "Canonical mixture"),
@@ -96,7 +102,7 @@ object PlotMixture {
 
 		// Plot the estimated mixture
 		/*val estMixPlot: Plot = FunctionPlot(
-			function = (x:Double) => estimatedMixture.p(x),
+			function = (x:Double) => estimatedMixture.p(numToT(x)),
 			pathRenderer = Some(PathRenderer.default(
 				color = Some(HTMLNamedColors.cyan),
 				label = Text(msg = "Estimated mixture"),

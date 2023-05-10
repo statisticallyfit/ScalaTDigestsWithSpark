@@ -6,6 +6,7 @@ import com.cibo.evilplot.colors.{Color, HTMLNamedColors}
 
 import flip.implicits._
 import flip.pdf.Sketch
+import util.TMeasure._
 
 import util.graph.PlotSketch._
 import util.graph.PlotDensity._
@@ -181,30 +182,23 @@ object try_FlipSketch_IncrConceptDrift_Binomial_SMALL extends App {
 		binomialOneSampleSketches_Batch.map(skt => indexOfFirstDifferentNum(skt.samples(SAMPLE_SIZE)._2))
 	}")*/
 
-
-	// TODO testing mixture model creation using APACHE (since some dists aren't in SMILE)
-	import org.apache.commons.math3.distribution.MixtureMultivariateRealDistribution
-
 	// ------------------------------------------------------------------------------------
 
 	// TODO stuck here - need to conver the sketch[int] to sketch[intz] but that would take a lot of time for
 	//  computer???
 	// TODO make implicit int -> intz, double -> real
-	import util.TMeasure._
-	implicit def convertIntToBigInt(skts: Seq[Sketch[Int]]): Seq[Sketch[IntZ]] = {
+	/*implicit def convertIntToBigInt(skts: Seq[Sketch[Int]]): Seq[Sketch[IntZ]] = {
 		skts.map(skt => skt.map(x => BigInt.int2bigInt(x)))
-	}
+	}*/
 
-	// TODO goal to not have to put [t,d] here
-	// Maybe can put separate [st, t, d] where st = int or double, T = IntZ or Real? Then import the implicit
-	// conversion within function?
-	plotSketchHistSplines[IntZ, BinomialDist](binomialOneSampleSketches,
+	// TODO just commenting out because of xMin < xMax error (one sample cause?)
+	/*plotSketchHistSplines(binomialOneSampleSketches,
 		titleName = Some(s"One-single Sample: Binomial sketches (No Reps)"),
 		givenColorSeq = Some(binomialColors),
 		graphToColorLabels = Some(binomialsIncrementalMove.map(_.toString)),
 		originalDists = binomialsIncrementalMove,
 		overlayMixture = true
-	)
+	)*/
 
 
 	// First before plotting, reduce the binomials!
